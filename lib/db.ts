@@ -1,10 +1,15 @@
 import { Pool } from "pg";
 
-const connectionString = process.env.POSTGRES_URL || process.env.DATABASE_URL;
+const rawConnectionString =
+  process.env.POSTGRES_URL || process.env.DATABASE_URL || "";
 
-if (!connectionString) {
+if (!rawConnectionString) {
   throw new Error("Missing POSTGRES_URL or DATABASE_URL");
 }
+
+const connectionString = rawConnectionString.includes("?")
+  ? `${rawConnectionString}&sslmode=no-verify`
+  : `${rawConnectionString}?sslmode=no-verify`;
 
 const globalForDb = globalThis as typeof globalThis & {
   pgPool?: Pool;

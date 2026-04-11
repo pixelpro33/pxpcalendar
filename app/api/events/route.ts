@@ -9,6 +9,7 @@ export async function GET() {
     return Response.json(result.rows);
   } catch (error) {
     console.error("GET EVENTS ERROR:", error);
+
     return Response.json(
       {
         error: true,
