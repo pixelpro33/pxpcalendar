@@ -16,6 +16,7 @@ export default function HomeClient({ version }: Props) {
   const [title, setTitle] = useState("");
   const [date, setDate] = useState("");
 
+  // LOAD
   useEffect(() => {
     const saved = localStorage.getItem("events");
     if (saved) {
@@ -23,17 +24,36 @@ export default function HomeClient({ version }: Props) {
     }
   }, []);
 
+  // SAVE
   useEffect(() => {
     localStorage.setItem("events", JSON.stringify(events));
   }, [events]);
 
+  // NOTIFICATION
+  function scheduleNotification(title: string, date: string) {
+    if (Notification.permission !== "granted") return;
+
+    const eventTime = new Date(date).getTime();
+    const now = Date.now();
+    const delay = eventTime - now;
+
+    if (delay <= 0) return;
+
+    setTimeout(() => {
+      new Notification("Reminder 📅", {
+        body: title,
+      });
+    }, delay);
+  }
+
   function addEvent() {
     if (!title || !date) return;
 
-    setEvents((prev) => [
-      ...prev,
-      { title, date }
-    ]);
+    const newEvent = { title, date };
+
+    setEvents((prev) => [...prev, newEvent]);
+
+    scheduleNotification(title, date);
 
     setTitle("");
     setDate("");
@@ -73,6 +93,21 @@ export default function HomeClient({ version }: Props) {
 
       <p style={{ opacity: 0.6 }}>Evenimente</p>
 
+      {/* NOTIFICATION BUTTON */}
+      <button
+        onClick={() => Notification.requestPermission()}
+        style={{
+          marginTop: 10,
+          padding: 10,
+          borderRadius: 10,
+          background: "#22c55e",
+          border: "none",
+          color: "white",
+        }}
+      >
+        Activeaza notificari 🔔
+      </button>
+
       {/* FORM */}
       <div style={{ marginTop: 20 }}>
         <input
@@ -89,7 +124,7 @@ export default function HomeClient({ version }: Props) {
         />
 
         <input
-          type="date"
+          type="datetime-local"
           value={date}
           onChange={(e) => setDate(e.target.value)}
           style={{
@@ -136,11 +171,9 @@ export default function HomeClient({ version }: Props) {
             }}
           >
             <div>
-              <div style={{ fontWeight: 500 }}>
-                {event.title}
-              </div>
+              <div style={{ fontWeight: 500 }}>{event.title}</div>
               <div style={{ opacity: 0.6, fontSize: 13 }}>
-                {event.date}
+                {new Date(event.date).toLocaleString()}
               </div>
             </div>
 
