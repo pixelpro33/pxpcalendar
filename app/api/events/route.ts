@@ -57,3 +57,35 @@ export async function POST(req: Request) {
     );
   }
 }
+
+export async function DELETE(req: Request) {
+  try {
+    const body = await req.json();
+    const id = String(body.id || "").trim();
+
+    if (!id) {
+      return Response.json(
+        {
+          error: true,
+          message: "ID lipsa.",
+        },
+        { status: 400 }
+      );
+    }
+
+    await db.query("DELETE FROM events WHERE id = $1", [id]);
+
+    return Response.json({ success: true });
+  } catch (error) {
+    console.error("DELETE EVENT ERROR:", error);
+
+    return Response.json(
+      {
+        error: true,
+        message: "Nu am putut sterge evenimentul.",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 }
+    );
+  }
+}
