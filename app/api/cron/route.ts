@@ -37,6 +37,10 @@ export async function GET() {
       [tomorrowStart.toISOString(), tomorrowEnd.toISOString()]
     );
 
+    if (!process.env.WHATSAPP_TOKEN) {
+      return Response.json({ error: true, message: "Missing WHATSAPP_TOKEN" }, { status: 500 });
+    }
+
     const rows = result.rows;
 
     if (rows.length === 0) {
