@@ -13,6 +13,25 @@ function formatRomanianDateTime(value: string) {
 
 export async function GET() {
   try {
+    const hasToken = !!process.env.WHATSAPP_TOKEN;
+    const hasPhoneId = !!process.env.WHATSAPP_PHONE_ID;
+    const hasTo = !!process.env.WHATSAPP_TO;
+
+    if (!hasToken || !hasPhoneId || !hasTo) {
+      return Response.json(
+        {
+          error: true,
+          message: "Missing WhatsApp env vars",
+          debug: {
+            hasToken,
+            hasPhoneId,
+            hasTo,
+          },
+        },
+        { status: 500 }
+      );
+    }
+
     const now = new Date();
 
     const bucharestNow = new Date(
@@ -36,10 +55,6 @@ export async function GET() {
       `,
       [tomorrowStart.toISOString(), tomorrowEnd.toISOString()]
     );
-
-    if (!process.env.WHATSAPP_TOKEN) {
-      return Response.json({ error: true, message: "Missing WHATSAPP_TOKEN" }, { status: 500 });
-    }
 
     const rows = result.rows;
 
