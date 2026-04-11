@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 type EventItem = {
   id: string;
   title: string;
-  event_date: string;
+  event_at: string;
   created_at?: string;
 };
 
@@ -13,10 +13,21 @@ type Props = {
   version: string;
 };
 
+function formatEventDate(value: string) {
+  return new Intl.DateTimeFormat("ro-RO", {
+    timeZone: "Europe/Bucharest",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value));
+}
+
 export default function HomeClient({ version }: Props) {
   const [events, setEvents] = useState<EventItem[]>([]);
   const [title, setTitle] = useState("");
-  const [date, setDate] = useState("");
+  const [eventAt, setEventAt] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function loadEvents() {
@@ -27,6 +38,7 @@ export default function HomeClient({ version }: Props) {
       if (Array.isArray(data)) {
         setEvents(data);
       } else {
+        console.error("LOAD EVENTS RESPONSE:", data);
         setEvents([]);
       }
     } catch (error) {
@@ -40,7 +52,10 @@ export default function HomeClient({ version }: Props) {
   }, []);
 
   async function addEvent() {
-    if (!title.trim() || !date) return;
+    if (!title.trim() || !eventAt) {
+      alert("Completeaza titlul si data/ora.");
+      return;
+    }
 
     try {
       setLoading(true);
@@ -52,16 +67,24 @@ export default function HomeClient({ version }: Props) {
         },
         body: JSON.stringify({
           title: title.trim(),
-          date,
+          eventAt,
         }),
       });
 
+      const data = await res.json();
+
       if (!res.ok) {
-        throw new Error("Failed to add event");
+        console.error("ADD EVENT RESPONSE:", data);
+        alert(
+          data?.details
+            ? `${data.message}\n\n${data.details}`
+            : data?.message || "Nu am putut salva evenimentul."
+        );
+        return;
       }
 
       setTitle("");
-      setDate("");
+      setEventAt("");
       await loadEvents();
     } catch (error) {
       console.error("ADD EVENT ERROR:", error);
@@ -119,9 +142,9 @@ export default function HomeClient({ version }: Props) {
         />
 
         <input
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
+          type="datetime-local"
+          value={eventAt}
+          onChange={(e) => setEventAt(e.target.value)}
           style={{
             padding: 10,
             borderRadius: 10,
@@ -167,7 +190,7 @@ export default function HomeClient({ version }: Props) {
           >
             <div style={{ fontWeight: 500 }}>{event.title}</div>
             <div style={{ opacity: 0.6, fontSize: 13 }}>
-              {event.event_date}
+              {formatEventDate(event.event_at)}
             </div>
           </div>
         ))}
