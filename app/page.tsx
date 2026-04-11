@@ -1,4 +1,17 @@
+"use client";
+
+import { useState } from "react";
+
 export default function Home() {
+  const [events, setEvents] = useState<string[]>([]);
+  const [input, setInput] = useState("");
+
+  function addEvent() {
+    if (!input) return;
+    setEvents([...events, input]);
+    setInput("");
+  }
+
   return (
     <main
       style={{
@@ -9,42 +22,56 @@ export default function Home() {
         fontFamily: "system-ui",
       }}
     >
-      <h1 style={{ fontSize: "28px", fontWeight: 600 }}>pxpcalendar 📅</h1>
+      <h1 style={{ fontSize: "28px", fontWeight: 600 }}>
+        pxpcalendar 📅
+      </h1>
 
-      <p style={{ opacity: 0.6, marginTop: 4 }}>Dashboard</p>
+      <p style={{ opacity: 0.6 }}>Dashboard</p>
 
+      {/* INPUT */}
       <div style={{ marginTop: 30 }}>
-        <div
+        <input
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="Adauga eveniment..."
           style={{
-            background: "#111",
-            padding: 20,
-            borderRadius: 16,
-            marginBottom: 15,
+            padding: 12,
+            borderRadius: 10,
+            border: "none",
+            width: "70%",
+            marginRight: 10,
           }}
-        >
-          💸 Bani disponibili: <b>0 lei</b>
-        </div>
+        />
 
-        <div
+        <button
+          onClick={addEvent}
           style={{
-            background: "#111",
-            padding: 20,
-            borderRadius: 16,
-            marginBottom: 15,
+            padding: 12,
+            borderRadius: 10,
+            background: "#4f46e5",
+            color: "white",
+            border: "none",
           }}
         >
-          📅 Evenimente: <b>0</b>
-        </div>
+          Adauga
+        </button>
+      </div>
 
-        <div
-          style={{
-            background: "#111",
-            padding: 20,
-            borderRadius: 16,
-          }}
-        >
-          🔔 Notificari: <b>OFF</b>
-        </div>
+      {/* LISTA */}
+      <div style={{ marginTop: 30 }}>
+        {events.map((event, index) => (
+          <div
+            key={index}
+            style={{
+              background: "#111",
+              padding: 15,
+              borderRadius: 12,
+              marginBottom: 10,
+            }}
+          >
+            📅 {event}
+          </div>
+        ))}
       </div>
     </main>
   );
