@@ -16,9 +16,9 @@ export default function CalendarFilters({
     <div
       style={{
         display: "flex",
-        gap: 10,
+        gap: 8,
         flexWrap: "wrap",
-        marginBottom: 16,
+        marginBottom: 12,
       }}
     >
       {(Object.keys(TYPE_CONFIG) as EventType[]).map((type) => {
@@ -33,18 +33,20 @@ export default function CalendarFilters({
               border: `1px solid ${active ? cfg.border : "rgba(255,255,255,0.08)"}`,
               background: active ? cfg.bg : "rgba(255,255,255,0.04)",
               color: active ? cfg.color : "rgba(255,255,255,0.7)",
-              borderRadius: 999,
-              padding: "9px 13px",
+              borderRadius: 10,
+              padding: "6px 10px",
               cursor: "pointer",
               display: "inline-flex",
-              gap: 8,
+              gap: 6,
               alignItems: "center",
               fontWeight: 600,
-              fontSize: 13,
+              fontSize: 12,
+              lineHeight: 1.2,
+              minHeight: 30,
             }}
           >
-            <span>{cfg.icon}</span>
-            <span>{cfg.label}</span>
+            <span style={{ fontSize: 12 }}>{cfg.icon}</span>
+            <span style={{ fontSize: 12 }}>{cfg.label}</span>
           </button>
         );
       })}
@@ -53,19 +55,23 @@ export default function CalendarFilters({
         onClick={() => setHideEmptyDays(!hideEmptyDays)}
         style={{
           border: "1px solid rgba(255,255,255,0.08)",
-          background: hideEmptyDays ? "rgba(59,130,246,0.22)" : "rgba(255,255,255,0.04)",
+          background: hideEmptyDays
+            ? "rgba(59,130,246,0.22)"
+            : "rgba(255,255,255,0.04)",
           color: "white",
-          borderRadius: 999,
-          padding: "9px 13px",
+          borderRadius: 10,
+          padding: "6px 10px",
           cursor: "pointer",
           display: "inline-flex",
-          gap: 8,
+          gap: 6,
           alignItems: "center",
           fontWeight: 600,
-          fontSize: 13,
+          fontSize: 12,
+          lineHeight: 1.2,
+          minHeight: 30,
         }}
       >
-        <span>Hide empty days</span>
+        <span style={{ fontSize: 12 }}>Hide empty days</span>
       </button>
     </div>
   );

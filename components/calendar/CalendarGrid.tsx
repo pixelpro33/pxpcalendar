@@ -16,7 +16,7 @@ export default function CalendarGrid({
       style={{
         background: "rgba(255,255,255,0.04)",
         border: "1px solid rgba(255,255,255,0.08)",
-        borderRadius: 24,
+        borderRadius: 10,
         overflow: "hidden",
         boxShadow: "0 18px 50px rgba(0,0,0,0.22)",
       }}
@@ -33,11 +33,12 @@ export default function CalendarGrid({
           <div
             key={label}
             style={{
-              padding: "14px 12px",
-              fontSize: 13,
+              padding: "8px 4px",
+              fontSize: 12,
               opacity: 0.65,
               textAlign: "center",
               fontWeight: 600,
+              lineHeight: 1.2,
             }}
           >
             {label}
@@ -59,36 +60,45 @@ export default function CalendarGrid({
             <div
               key={day}
               style={{
-                minHeight: 150,
+                minHeight: 100,
                 borderRight:
                   day % 7 !== 0 ? "1px solid rgba(255,255,255,0.06)" : "none",
                 borderBottom: "1px solid rgba(255,255,255,0.06)",
-                padding: 10,
+                padding: 0,
                 display: "flex",
                 flexDirection: "column",
-                gap: 6,
+                gap: 0,
                 overflow: "hidden",
               }}
             >
               <div
                 style={{
-                  fontSize: 18,
+                  fontSize: 12,
                   fontWeight: 700,
                   opacity: 0.92,
-                  marginBottom: 4,
+                  padding: "8px 8px 6px",
+                  lineHeight: 1.2,
                 }}
               >
                 {day}
               </div>
 
-              {dayItems.slice(0, 3).map((item) => (
-                <EventChip
-                  key={item.id}
-                  item={item}
-                  compact
-                  onClick={() => onSelectItem(item)}
-                />
-              ))}
+              <div
+                style={{
+                  display: "grid",
+                  gap: 1,
+                  width: "100%",
+                }}
+              >
+                {dayItems.slice(0, 3).map((item) => (
+                  <EventChip
+                    key={item.id}
+                    item={item}
+                    compact
+                    onClick={() => onSelectItem(item)}
+                  />
+                ))}
+              </div>
 
               {dayItems.length > 3 && (
                 <button
@@ -97,10 +107,11 @@ export default function CalendarGrid({
                     border: "none",
                     background: "transparent",
                     color: "rgba(255,255,255,0.5)",
-                    fontSize: 11,
+                    fontSize: 12,
                     textAlign: "left",
-                    padding: "2px 4px",
+                    padding: "4px 8px",
                     cursor: "pointer",
+                    lineHeight: 1.2,
                   }}
                 >
                   +{dayItems.length - 3} more

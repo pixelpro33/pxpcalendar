@@ -23,10 +23,10 @@ export default function CalendarHeader({
   return (
     <div
       style={{
-        marginBottom: 16,
+        marginBottom: 12,
         display: "flex",
         flexDirection: "column",
-        gap: 14,
+        gap: 10,
       }}
     >
       <div
@@ -34,21 +34,30 @@ export default function CalendarHeader({
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          gap: 12,
+          gap: 10,
           flexWrap: "wrap",
         }}
       >
         <div>
           <div
             style={{
-              fontSize: 34,
+              fontSize: 12,
               fontWeight: 700,
-              letterSpacing: -1,
+              letterSpacing: 0,
+              lineHeight: 1.2,
             }}
           >
             pxpcalendar
           </div>
-          <div style={{ opacity: 0.6, marginTop: 4 }}>
+
+          <div
+            style={{
+              opacity: 0.6,
+              marginTop: 4,
+              fontSize: 12,
+              lineHeight: 1.2,
+            }}
+          >
             iOS dark UI preview · v{version}
           </div>
         </div>
@@ -56,7 +65,7 @@ export default function CalendarHeader({
         <div
           style={{
             display: "flex",
-            gap: 10,
+            gap: 8,
             alignItems: "center",
             flexWrap: "wrap",
           }}
@@ -68,10 +77,11 @@ export default function CalendarHeader({
               background: "rgba(255,255,255,0.06)",
               border: "1px solid rgba(255,255,255,0.08)",
               color: "white",
-              borderRadius: 14,
-              padding: "10px 14px",
-              fontSize: 14,
+              borderRadius: 10,
+              padding: "6px 10px",
+              fontSize: 12,
               outline: "none",
+              height: 32,
             }}
           >
             {years.map((year) => (
@@ -86,9 +96,9 @@ export default function CalendarHeader({
               display: "flex",
               background: "rgba(255,255,255,0.06)",
               border: "1px solid rgba(255,255,255,0.08)",
-              borderRadius: 14,
-              padding: 4,
-              gap: 4,
+              borderRadius: 10,
+              padding: 2,
+              gap: 2,
             }}
           >
             <button
@@ -96,25 +106,32 @@ export default function CalendarHeader({
               style={{
                 border: "none",
                 borderRadius: 10,
-                padding: "10px 14px",
+                padding: "6px 10px",
                 background: viewMode === "grid" ? "#1d4ed8" : "transparent",
                 color: "white",
                 cursor: "pointer",
                 fontWeight: 600,
+                fontSize: 12,
+                lineHeight: 1.2,
+                height: 28,
               }}
             >
               Grid
             </button>
+
             <button
               onClick={() => setViewMode("list")}
               style={{
                 border: "none",
                 borderRadius: 10,
-                padding: "10px 14px",
+                padding: "6px 10px",
                 background: viewMode === "list" ? "#1d4ed8" : "transparent",
                 color: "white",
                 cursor: "pointer",
                 fontWeight: 600,
+                fontSize: 12,
+                lineHeight: 1.2,
+                height: 28,
               }}
             >
               List
@@ -126,9 +143,9 @@ export default function CalendarHeader({
       <div
         style={{
           display: "flex",
-          gap: 10,
+          gap: 8,
           overflowX: "auto",
-          paddingBottom: 4,
+          paddingBottom: 2,
         }}
       >
         {MONTHS.map((month, index) => {
@@ -146,12 +163,15 @@ export default function CalendarHeader({
                   ? "rgba(59,130,246,0.22)"
                   : "rgba(255,255,255,0.04)",
                 color: active ? "#dbeafe" : "rgba(255,255,255,0.88)",
-                borderRadius: 16,
-                padding: "12px 18px",
+                borderRadius: 10,
+                padding: "6px 10px",
                 cursor: "pointer",
                 whiteSpace: "nowrap",
                 fontWeight: 600,
-                minWidth: 76,
+                minWidth: 56,
+                fontSize: 12,
+                lineHeight: 1.2,
+                height: 30,
               }}
             >
               {month}

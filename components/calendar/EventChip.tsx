@@ -22,22 +22,25 @@ export default function EventChip({
         width: "100%",
         display: "flex",
         alignItems: "center",
-        gap: 6,
-        borderRadius: 10,
-        padding: compact ? "5px 7px" : "10px 12px",
-        fontSize: compact ? 11 : 13,
+        gap: 4,
+        borderRadius: 0,
+        padding: compact ? "4px 6px" : "8px 10px",
+        fontSize: 12,
         lineHeight: 1.2,
         cursor: "pointer",
         overflow: "hidden",
         whiteSpace: "nowrap",
         textOverflow: "ellipsis",
         backgroundClip: "padding-box",
+        margin: 0,
       }}
     >
-      <span style={{ flexShrink: 0 }}>{typeCfg.icon}</span>
+      <span style={{ flexShrink: 0, fontSize: 12 }}>{typeCfg.icon}</span>
 
       {!item.allDay && item.time && (
-        <span style={{ opacity: 0.85, flexShrink: 0 }}>{item.time}</span>
+        <span style={{ opacity: 0.85, flexShrink: 0, fontSize: 12 }}>
+          {item.time}
+        </span>
       )}
 
       <span
@@ -47,6 +50,7 @@ export default function EventChip({
           whiteSpace: "nowrap",
           textAlign: "left",
           flex: 1,
+          fontSize: 12,
         }}
       >
         {item.title}
@@ -56,7 +60,7 @@ export default function EventChip({
         <span
           style={{
             opacity: 0.7,
-            fontSize: 11,
+            fontSize: 12,
             flexShrink: 0,
           }}
         >

@@ -14,7 +14,9 @@ export function getDaysInMonth(year: number, monthIndex: number) {
 }
 
 export function formatEventDate(item: CalendarItem) {
-  const date = new Date(`${item.date}T${item.allDay ? "00:00" : item.time || "00:00"}`);
+  const date = new Date(
+    `${item.date}T${item.allDay ? "00:00" : item.time || "00:00"}`,
+  );
   return new Intl.DateTimeFormat("ro-RO", {
     weekday: "long",
     day: "2-digit",
@@ -33,7 +35,11 @@ export function formatShortDate(value: string) {
   }).format(new Date(value));
 }
 
-export function formatCompactDate(date: string, time?: string, allDay?: boolean) {
+export function formatCompactDate(
+  date: string,
+  time?: string,
+  allDay?: boolean,
+) {
   const value = `${date}T${allDay ? "00:00" : time || "00:00"}`;
   return new Intl.DateTimeFormat("ro-RO", {
     day: "2-digit",
@@ -45,14 +51,20 @@ export function formatCompactDate(date: string, time?: string, allDay?: boolean)
 }
 
 export function getDaysRemaining(item: CalendarItem) {
-  const target = new Date(`${item.date}T${item.allDay ? "00:00" : item.time || "00:00"}`);
+  const target = new Date(
+    `${item.date}T${item.allDay ? "00:00" : item.time || "00:00"}`,
+  );
   const now = new Date();
 
-  const startNow = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const startNow = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+  ).getTime();
   const startTarget = new Date(
     target.getFullYear(),
     target.getMonth(),
-    target.getDate()
+    target.getDate(),
   ).getTime();
 
   const diffDays = Math.round((startTarget - startNow) / 86400000);
@@ -74,13 +86,15 @@ export function getEventChipStyle(item: CalendarItem) {
     border: `1px solid ${border}`,
     color: typeCfg.color,
     opacity: item.completed ? 0.45 : 1,
-    textDecoration: item.completed ? "line-through" as const : "none" as const,
+    textDecoration: item.completed
+      ? ("line-through" as const)
+      : ("none" as const),
   };
 }
 
 export function buildGroupedByDay(
   items: CalendarItem[],
-  daysInMonth: number
+  daysInMonth: number,
 ): Map<number, CalendarItem[]> {
   const map = new Map<number, CalendarItem[]>();
 
@@ -164,7 +178,7 @@ export function filterMonthItems(
   items: CalendarItem[],
   selectedYear: number,
   selectedMonth: number,
-  filters: Record<EventType, boolean>
+  filters: Record<EventType, boolean>,
 ) {
   return items.filter((item) => {
     const [y, m] = item.date.split("-").map(Number);
@@ -174,7 +188,9 @@ export function filterMonthItems(
 
 export function getMonthPayTotals(items: CalendarItem[]) {
   const pays = items.filter((i) => i.type === "pay");
-  const paid = pays.filter((i) => i.completed).reduce((sum, i) => sum + (i.amount || 0), 0);
+  const paid = pays
+    .filter((i) => i.completed)
+    .reduce((sum, i) => sum + (i.amount || 0), 0);
   const remaining = pays
     .filter((i) => !i.completed)
     .reduce((sum, i) => sum + (i.amount || 0), 0);
