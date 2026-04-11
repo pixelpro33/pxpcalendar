@@ -15,8 +15,8 @@ export default function HomeClient({ version }: Props) {
   const [events, setEvents] = useState<EventItem[]>([]);
   const [title, setTitle] = useState("");
   const [date, setDate] = useState("");
+  const [sending, setSending] = useState(false);
 
-  // LOAD
   useEffect(() => {
     const saved = localStorage.getItem("events");
     if (saved) {
@@ -24,39 +24,46 @@ export default function HomeClient({ version }: Props) {
     }
   }, []);
 
-  // SAVE
   useEffect(() => {
     localStorage.setItem("events", JSON.stringify(events));
   }, [events]);
 
-  // NOTIFICATION
-  function scheduleNotification(title: string, date: string) {
-    if (Notification.permission !== "granted") return;
+  async function sendWhatsApp() {
+    const response = await fetch("/api/whatsapp/send", {
+      method: "POST",
+    });
 
-    const eventTime = new Date(date).getTime();
-    const now = Date.now();
-    const delay = eventTime - now;
+    const data = await response.json();
 
-    if (delay <= 0) return;
+    if (!response.ok) {
+      throw new Error(data?.error ? JSON.stringify(data.error) : "WhatsApp send failed");
+    }
 
-    setTimeout(() => {
-      new Notification("Reminder 📅", {
-        body: title,
-      });
-    }, delay);
+    return data;
   }
 
-  function addEvent() {
-    if (!title || !date) return;
+  async function addEvent() {
+    if (!title.trim() || !date) return;
 
-    const newEvent = { title, date };
+    const newEvent = {
+      title: title.trim(),
+      date,
+    };
 
     setEvents((prev) => [...prev, newEvent]);
-
-    scheduleNotification(title, date);
-
     setTitle("");
     setDate("");
+
+    try {
+      setSending(true);
+      await sendWhatsApp();
+      alert("Eveniment adaugat si mesajul WhatsApp a fost trimis.");
+    } catch (error) {
+      console.error(error);
+      alert("Evenimentul a fost adaugat, dar mesajul WhatsApp nu a fost trimis.");
+    } finally {
+      setSending(false);
+    }
   }
 
   function removeEvent(index: number) {
@@ -71,9 +78,10 @@ export default function HomeClient({ version }: Props) {
         color: "white",
         padding: "20px",
         fontFamily: "system-ui",
+        maxWidth: 720,
+        margin: "0 auto",
       }}
     >
-      {/* VERSION */}
       <div
         style={{
           background: "#111",
@@ -81,34 +89,18 @@ export default function HomeClient({ version }: Props) {
           padding: 10,
           marginBottom: 20,
           fontSize: 13,
-          opacity: 0.8,
+          opacity: 0.85,
         }}
       >
         Versiune: <b>{version}</b>
       </div>
 
-      <h1 style={{ fontSize: "28px", fontWeight: 600 }}>
+      <h1 style={{ fontSize: "28px", fontWeight: 600, marginBottom: 4 }}>
         pxpcalendar 📅
       </h1>
 
-      <p style={{ opacity: 0.6 }}>Evenimente</p>
+      <p style={{ opacity: 0.6, marginTop: 0 }}>Evenimente + WhatsApp</p>
 
-      {/* NOTIFICATION BUTTON */}
-      <button
-        onClick={() => Notification.requestPermission()}
-        style={{
-          marginTop: 10,
-          padding: 10,
-          borderRadius: 10,
-          background: "#22c55e",
-          border: "none",
-          color: "white",
-        }}
-      >
-        Activeaza notificari 🔔
-      </button>
-
-      {/* FORM */}
       <div style={{ marginTop: 20 }}>
         <input
           value={title}
@@ -138,20 +130,23 @@ export default function HomeClient({ version }: Props) {
 
         <button
           onClick={addEvent}
+          disabled={sending}
           style={{
             padding: 12,
             borderRadius: 10,
-            background: "#4f46e5",
+            background: "#25D366",
             color: "white",
             border: "none",
             width: "100%",
+            opacity: sending ? 0.7 : 1,
+            cursor: sending ? "not-allowed" : "pointer",
+            fontWeight: 600,
           }}
         >
-          Adauga eveniment
+          {sending ? "Se trimite..." : "Adauga + WhatsApp"}
         </button>
       </div>
 
-      {/* LISTA */}
       <div style={{ marginTop: 30 }}>
         {events.length === 0 && (
           <p style={{ opacity: 0.5 }}>Nu ai evenimente</p>
@@ -168,6 +163,7 @@ export default function HomeClient({ version }: Props) {
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
+              gap: 12,
             }}
           >
             <div>
@@ -180,11 +176,12 @@ export default function HomeClient({ version }: Props) {
             <button
               onClick={() => removeEvent(index)}
               style={{
-                background: "red",
+                background: "#dc2626",
                 border: "none",
                 color: "white",
-                padding: "6px 10px",
+                padding: "8px 12px",
                 borderRadius: 8,
+                cursor: "pointer",
               }}
             >
               X
