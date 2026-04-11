@@ -1,6 +1,6 @@
 {
   "name": "pxpcalendar",
-  "version": "0.0.5",
+  "version": "0.0.7",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -13,8 +13,7 @@
   "dependencies": {
     "next": "16.2.3",
     "react": "19.2.4",
-    "react-dom": "19.2.4",
-    "web-push": "^3.6.7"
+    "react-dom": "19.2.4"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
