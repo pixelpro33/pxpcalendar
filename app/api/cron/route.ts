@@ -49,10 +49,45 @@ export async function GET() {
       })
       .join("\n");
 
+    const message = `Ai evenimente maine:\n${list}`;
+
+    const whatsappResponse = await fetch(
+      `https://graph.facebook.com/v19.0/${process.env.WHATSAPP_PHONE_ID}/messages`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messaging_product: "whatsapp",
+          to: process.env.WHATSAPP_TO,
+          type: "text",
+          text: {
+            body: message,
+          },
+        }),
+      }
+    );
+
+    const whatsappData = await whatsappResponse.json();
+
+    if (!whatsappResponse.ok) {
+      return Response.json(
+        {
+          error: true,
+          message: "WhatsApp send failed.",
+          details: whatsappData,
+        },
+        { status: 500 }
+      );
+    }
+
     return Response.json({
       success: true,
       count: rows.length,
-      preview: `Ai evenimente maine:\n${list}`,
+      message,
+      whatsapp: whatsappData,
     });
   } catch (error) {
     console.error("CRON ERROR:", error);
