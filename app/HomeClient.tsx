@@ -3,8 +3,10 @@
 import { useEffect, useState } from "react";
 
 type EventItem = {
+  id: string;
   title: string;
-  date: string;
+  event_date: string;
+  created_at?: string;
 };
 
 type Props = {
@@ -15,59 +17,58 @@ export default function HomeClient({ version }: Props) {
   const [events, setEvents] = useState<EventItem[]>([]);
   const [title, setTitle] = useState("");
   const [date, setDate] = useState("");
-  const [sending, setSending] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    const saved = localStorage.getItem("events");
-    if (saved) {
-      setEvents(JSON.parse(saved));
+  async function loadEvents() {
+    try {
+      const res = await fetch("/api/events", { cache: "no-store" });
+      const data = await res.json();
+
+      if (Array.isArray(data)) {
+        setEvents(data);
+      } else {
+        setEvents([]);
+      }
+    } catch (error) {
+      console.error("LOAD EVENTS ERROR:", error);
+      setEvents([]);
     }
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem("events", JSON.stringify(events));
-  }, [events]);
-
-  async function sendWhatsApp() {
-    const response = await fetch("/api/whatsapp/send", {
-      method: "POST",
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data?.error ? JSON.stringify(data.error) : "WhatsApp send failed");
-    }
-
-    return data;
   }
+
+  useEffect(() => {
+    loadEvents();
+  }, []);
 
   async function addEvent() {
     if (!title.trim() || !date) return;
 
-    const newEvent = {
-      title: title.trim(),
-      date,
-    };
-
-    setEvents((prev) => [...prev, newEvent]);
-    setTitle("");
-    setDate("");
-
     try {
-      setSending(true);
-      await sendWhatsApp();
-      alert("Eveniment adaugat si mesajul WhatsApp a fost trimis.");
-    } catch (error) {
-      console.error(error);
-      alert("Evenimentul a fost adaugat, dar mesajul WhatsApp nu a fost trimis.");
-    } finally {
-      setSending(false);
-    }
-  }
+      setLoading(true);
 
-  function removeEvent(index: number) {
-    setEvents((prev) => prev.filter((_, i) => i !== index));
+      const res = await fetch("/api/events", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: title.trim(),
+          date,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to add event");
+      }
+
+      setTitle("");
+      setDate("");
+      await loadEvents();
+    } catch (error) {
+      console.error("ADD EVENT ERROR:", error);
+      alert("Nu am putut salva evenimentul.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -99,7 +100,9 @@ export default function HomeClient({ version }: Props) {
         pxpcalendar 📅
       </h1>
 
-      <p style={{ opacity: 0.6, marginTop: 0 }}>Evenimente + WhatsApp</p>
+      <p style={{ opacity: 0.6, marginTop: 0 }}>
+        Evenimente + reminder WhatsApp
+      </p>
 
       <div style={{ marginTop: 20 }}>
         <input
@@ -116,7 +119,7 @@ export default function HomeClient({ version }: Props) {
         />
 
         <input
-          type="datetime-local"
+          type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
           style={{
@@ -130,7 +133,7 @@ export default function HomeClient({ version }: Props) {
 
         <button
           onClick={addEvent}
-          disabled={sending}
+          disabled={loading}
           style={{
             padding: 12,
             borderRadius: 10,
@@ -138,12 +141,12 @@ export default function HomeClient({ version }: Props) {
             color: "white",
             border: "none",
             width: "100%",
-            opacity: sending ? 0.7 : 1,
-            cursor: sending ? "not-allowed" : "pointer",
+            opacity: loading ? 0.7 : 1,
+            cursor: loading ? "not-allowed" : "pointer",
             fontWeight: 600,
           }}
         >
-          {sending ? "Se trimite..." : "Adauga + WhatsApp"}
+          {loading ? "Se salveaza..." : "Adauga eveniment"}
         </button>
       </div>
 
@@ -152,40 +155,20 @@ export default function HomeClient({ version }: Props) {
           <p style={{ opacity: 0.5 }}>Nu ai evenimente</p>
         )}
 
-        {events.map((event, index) => (
+        {events.map((event) => (
           <div
-            key={index}
+            key={event.id}
             style={{
               background: "#111",
               padding: 15,
               borderRadius: 12,
               marginBottom: 10,
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              gap: 12,
             }}
           >
-            <div>
-              <div style={{ fontWeight: 500 }}>{event.title}</div>
-              <div style={{ opacity: 0.6, fontSize: 13 }}>
-                {new Date(event.date).toLocaleString()}
-              </div>
+            <div style={{ fontWeight: 500 }}>{event.title}</div>
+            <div style={{ opacity: 0.6, fontSize: 13 }}>
+              {event.event_date}
             </div>
-
-            <button
-              onClick={() => removeEvent(index)}
-              style={{
-                background: "#dc2626",
-                border: "none",
-                color: "white",
-                padding: "8px 12px",
-                borderRadius: 8,
-                cursor: "pointer",
-              }}
-            >
-              X
-            </button>
           </div>
         ))}
       </div>
