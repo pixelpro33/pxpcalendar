@@ -2,13 +2,19 @@
 
 import { useEffect, useState } from "react";
 
+type EventItem = {
+  title: string;
+  date: string;
+};
+
 type Props = {
   version: string;
 };
 
 export default function HomeClient({ version }: Props) {
-  const [events, setEvents] = useState<string[]>([]);
-  const [input, setInput] = useState("");
+  const [events, setEvents] = useState<EventItem[]>([]);
+  const [title, setTitle] = useState("");
+  const [date, setDate] = useState("");
 
   useEffect(() => {
     const saved = localStorage.getItem("events");
@@ -22,10 +28,19 @@ export default function HomeClient({ version }: Props) {
   }, [events]);
 
   function addEvent() {
-    const value = input.trim();
-    if (!value) return;
-    setEvents((prev) => [...prev, value]);
-    setInput("");
+    if (!title || !date) return;
+
+    setEvents((prev) => [
+      ...prev,
+      { title, date }
+    ]);
+
+    setTitle("");
+    setDate("");
+  }
+
+  function removeEvent(index: number) {
+    setEvents((prev) => prev.filter((_, i) => i !== index));
   }
 
   return (
@@ -38,15 +53,15 @@ export default function HomeClient({ version }: Props) {
         fontFamily: "system-ui",
       }}
     >
+      {/* VERSION */}
       <div
         style={{
           background: "#111",
-          border: "1px solid rgba(255,255,255,0.08)",
-          borderRadius: 14,
-          padding: 12,
+          borderRadius: 12,
+          padding: 10,
           marginBottom: 20,
           fontSize: 13,
-          opacity: 0.85,
+          opacity: 0.8,
         }}
       >
         Versiune: <b>{version}</b>
@@ -56,19 +71,33 @@ export default function HomeClient({ version }: Props) {
         pxpcalendar 📅
       </h1>
 
-      <p style={{ opacity: 0.6 }}>Dashboard</p>
+      <p style={{ opacity: 0.6 }}>Evenimente</p>
 
-      <div style={{ marginTop: 30 }}>
+      {/* FORM */}
+      <div style={{ marginTop: 20 }}>
         <input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Adauga eveniment..."
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Titlu eveniment"
           style={{
-            padding: 12,
+            padding: 10,
             borderRadius: 10,
             border: "none",
-            width: "70%",
-            marginRight: 10,
+            width: "100%",
+            marginBottom: 10,
+          }}
+        />
+
+        <input
+          type="date"
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+          style={{
+            padding: 10,
+            borderRadius: 10,
+            border: "none",
+            width: "100%",
+            marginBottom: 10,
           }}
         />
 
@@ -80,12 +109,14 @@ export default function HomeClient({ version }: Props) {
             background: "#4f46e5",
             color: "white",
             border: "none",
+            width: "100%",
           }}
         >
-          Adauga
+          Adauga eveniment
         </button>
       </div>
 
+      {/* LISTA */}
       <div style={{ marginTop: 30 }}>
         {events.length === 0 && (
           <p style={{ opacity: 0.5 }}>Nu ai evenimente</p>
@@ -99,9 +130,32 @@ export default function HomeClient({ version }: Props) {
               padding: 15,
               borderRadius: 12,
               marginBottom: 10,
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
             }}
           >
-            📅 {event}
+            <div>
+              <div style={{ fontWeight: 500 }}>
+                {event.title}
+              </div>
+              <div style={{ opacity: 0.6, fontSize: 13 }}>
+                {event.date}
+              </div>
+            </div>
+
+            <button
+              onClick={() => removeEvent(index)}
+              style={{
+                background: "red",
+                border: "none",
+                color: "white",
+                padding: "6px 10px",
+                borderRadius: 8,
+              }}
+            >
+              X
+            </button>
           </div>
         ))}
       </div>
