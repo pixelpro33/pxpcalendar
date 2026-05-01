@@ -1,0 +1,354 @@
+   Calendar grid / list
+   ========================= */
+
+.calendar-grid-wrap {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.calendar-weekday {
+  min-width: 0;
+  padding: 10px 2px;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 10px;
+  font-weight: 850;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.calendar-day {
+  min-width: 0;
+  min-height: 112px;
+  padding: 7px 5px;
+  border-right: 1px solid rgba(255, 255, 255, 0.075);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.075);
+  overflow: hidden;
+}
+
+.calendar-day:nth-child(7n) {
+  border-right: 0;
+}
+
+.calendar-day.empty {
+  background: rgba(255, 255, 255, 0.018);
+}
+
+.calendar-day-number {
+  margin-bottom: 7px;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 13px;
+  font-weight: 850;
+  text-align: center;
+}
+
+.calendar-day-events {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.calendar-more {
+  width: 100%;
+  min-width: 0;
+  height: 18px;
+  border: 0;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.65);
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 850;
+  overflow: hidden;
+}
+
+.event-chip {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  border: 1px solid transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  color: white;
+  text-align: left;
+  overflow: hidden;
+}
+
+.event-chip-grid {
+  height: 20px;
+  border-radius: 5px;
+  padding: 0 4px;
+  gap: 3px;
+  font-size: 10px;
+  font-weight: 850;
+  line-height: 1;
+}
+
+.event-chip-list {
+  min-height: 48px;
+  border-radius: 9px;
+  padding: 0 14px;
+  gap: 8px;
+  font-size: 17px;
+  font-weight: 750;
+  line-height: 1.1;
+}
+
+.event-chip-icon {
+  flex: 0 0 auto;
+  opacity: 0.9;
+}
+
+.event-chip-title {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.event-chip.is-completed {
+  opacity: 0.48;
+}
+
+.event-chip.is-completed .event-chip-title {
+  text-decoration: line-through;
+}
+
+.calendar-list {
+  display: grid;
+  gap: 22px;
+  padding: 8px 0 80px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.calendar-list-row {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.calendar-list-date {
+  min-width: 0;
+  padding-top: 2px;
+  text-align: center;
+}
+
+.calendar-list-weekday {
+  display: block;
+  margin-bottom: 3px;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 12px;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.calendar-list-day {
+  display: block;
+  color: rgba(255, 255, 255, 0.94);
+  font-size: 32px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.calendar-list-events {
+  display: grid;
+  gap: 9px;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.calendar-list-empty {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.035);
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 14px;
+  font-weight: 650;
+}
+
+/* Legacy calendar component classes, kept safe */
+.pxp-grid-panel {
+  overflow: hidden;
+  border-radius: 22px;
+}
+
+.pxp-weekdays {
+  display: none;
+}
+
+.pxp-calendar-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.pxp-calendar-day {
+  min-width: 0;
+  min-height: 92px;
+  border-radius: 22px;
+  padding: 12px;
+}
+
+.pxp-day-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.pxp-day-number {
+  font-size: 20px;
+  font-weight: 850;
+  letter-spacing: -0.03em;
+}
+
+.pxp-day-count {
+  color: var(--muted-soft);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.pxp-day-events {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.pxp-more-button {
+  width: 100%;
+  margin-top: 5px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 6px 2px 0;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.pxp-list {
+  display: grid;
+  gap: 10px;
+}
+
+.pxp-list-day {
+  border-radius: 22px;
+  padding: 14px;
+}
+
+.pxp-list-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.pxp-list-date {
+  font-size: 17px;
+  font-weight: 850;
+  letter-spacing: -0.02em;
+}
+
+.pxp-empty-text {
+  color: var(--muted-soft);
+  font-size: 14px;
+}
+
+.pxp-chip {
+  width: 100%;
+  min-width: 0;
+  min-height: 39px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 7px;
+  border-radius: 15px;
+  padding: 8px 10px;
+  cursor: pointer;
+  text-align: left;
+  overflow: hidden;
+}
+
+.pxp-chip.is-compact {
+  min-height: 31px;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 5px;
+  border-radius: 12px;
+  padding: 6px 8px;
+}
+
+.pxp-chip-main {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+}
+
+.pxp-chip-icon,
+.pxp-chip-time,
+.pxp-chip-days {
+  flex: 0 0 auto;
+  font-size: 12px;
+}
+
+.pxp-chip-time,
+.pxp-chip-days {
+  opacity: 0.74;
+  font-weight: 750;
+}
+
+.pxp-chip-title {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 12px;
+  font-weight: 750;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* =========================

@@ -1,0 +1,198 @@
+   App navigation
+   ========================= */
+
+.pxp-app-nav {
+  position: sticky;
+  top: 82px;
+  z-index: 9;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+  margin: 8px 0 10px;
+  padding: 5px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.055);
+  backdrop-filter: blur(16px);
+}
+
+.pxp-app-nav-button {
+  min-width: 0;
+  min-height: 42px;
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.58);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.pxp-app-nav-button.is-active {
+  background: var(--blue);
+  color: white;
+  box-shadow: 0 12px 26px rgba(37, 99, 235, 0.24);
+}
+
+.pxp-app-nav-icon {
+  flex: 0 0 auto;
+  font-size: 15px;
+}
+
+/* =========================
+   Mobile hamburger
+   ========================= */
+
+.pxp-mobile-nav-top {
+  display: none !important;
+}
+
+.pxp-mobile-menu-button {
+  width: 46px;
+  height: 46px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.055);
+  color: white;
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.2);
+}
+
+.pxp-mobile-menu-button span {
+  display: block;
+  width: 18px;
+  height: 2px;
+  border-radius: 999px;
+  background: white;
+}
+
+.pxp-mobile-menu-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  background: rgba(0, 0, 0, 0.58);
+  backdrop-filter: blur(12px);
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 14px;
+}
+
+.pxp-mobile-menu-sheet {
+  width: min(100%, 320px);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: #101117;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+  animation: pxpMobileMenuIn 180ms ease-out;
+}
+
+.pxp-mobile-menu-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 14px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.pxp-mobile-menu-kicker {
+  margin-bottom: 4px;
+  color: var(--muted-soft);
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.pxp-mobile-menu-title {
+  color: white;
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+.pxp-mobile-menu-close {
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  color: white;
+  cursor: pointer;
+  flex: 0 0 auto;
+  font-size: 16px;
+}
+
+.pxp-mobile-menu-list {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+}
+
+.pxp-mobile-menu-item {
+  width: 100%;
+  min-height: 52px;
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  text-align: left;
+}
+
+.pxp-mobile-menu-item.is-active {
+  border-color: rgba(96, 165, 250, 0.5);
+  background: rgba(37, 99, 235, 0.22);
+}
+
+.pxp-mobile-menu-item-icon {
+  flex: 0 0 auto;
+  font-size: 18px;
+}
+
+.pxp-mobile-menu-item-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 850;
+}
+
+.pxp-mobile-menu-item-badge {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  padding: 6px 8px;
+  font-size: 11px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+@keyframes pxpMobileMenuIn {
+  from {
+    transform: translateY(-8px) scale(0.98);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+/* =========================

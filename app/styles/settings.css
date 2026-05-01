@@ -1,0 +1,142 @@
+   Settings
+   ========================= */
+
+.pxp-settings {
+  width: 100%;
+  margin: 10px 0 80px;
+}
+
+.pxp-settings-head {
+  margin-bottom: 12px;
+}
+
+.pxp-settings-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.pxp-settings-card {
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.045);
+  box-shadow: 0 14px 38px rgba(0, 0, 0, 0.16);
+  padding: 14px;
+}
+
+.pxp-settings-card-head h3 {
+  margin: 0 0 6px;
+  color: white;
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: -0.035em;
+}
+
+.pxp-settings-card-head p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.pxp-settings-category-create {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.pxp-settings-category-meta {
+  margin-top: 12px;
+  color: rgba(255, 255, 255, 0.52);
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.pxp-settings-category-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.pxp-settings-category-row {
+  min-height: 42px;
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.035);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+}
+
+.pxp-settings-category-row.is-disabled {
+  opacity: 0.52;
+}
+
+.pxp-settings-category-main {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.pxp-settings-category-row span {
+  color: white;
+  font-size: 14px;
+  font-weight: 850;
+}
+
+.pxp-settings-category-row small {
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.pxp-settings-row-actions {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.pxp-settings-button {
+  min-height: 36px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  color: white;
+  cursor: pointer;
+  padding: 8px 10px;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.pxp-settings-button.primary {
+  border-color: rgba(96, 165, 250, 0.42);
+  background: rgba(37, 99, 235, 0.82);
+}
+
+.pxp-settings-button.danger {
+  border-color: rgba(239, 68, 68, 0.34);
+  background: rgba(239, 68, 68, 0.14);
+  color: rgba(254, 202, 202, 0.95);
+}
+
+.pxp-settings-edit-row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 7px;
+}
+
+.pxp-settings-placeholder {
+  margin-top: 14px;
+  border: 1px dashed rgba(255, 255, 255, 0.16);
+  border-radius: 16px;
+  color: rgba(255, 255, 255, 0.52);
+  padding: 14px;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+/* =========================

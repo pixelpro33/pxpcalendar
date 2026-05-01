@@ -1,0 +1,180 @@
+   App shell
+   ========================= */
+
+.pxp-shell {
+  min-height: 100svh;
+  min-width: 0;
+  color: white;
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(79, 70, 229, 0.18),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at top right,
+      rgba(14, 165, 233, 0.1),
+      transparent 28%
+    ),
+    #09090d;
+  padding: 12px 10px calc(104px + var(--safe-bottom));
+  overflow-x: hidden;
+}
+
+.pxp-container {
+  width: min(100%, 1400px);
+  min-width: 0;
+  margin: 0 auto;
+}
+
+/* =========================
+   Header
+   ========================= */
+
+.pxp-header {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 10px;
+  min-width: 0;
+}
+
+.pxp-header-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+  margin-bottom: 2px;
+}
+
+.pxp-title {
+  font-size: clamp(22px, 6vw, 34px);
+  line-height: 1;
+  font-weight: 900;
+  letter-spacing: -0.055em;
+}
+
+.pxp-subtitle {
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.pxp-header-menu-slot {
+  flex: 0 0 auto;
+  display: none;
+}
+
+.pxp-header-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+  min-width: 0;
+}
+
+.pxp-header-spacer {
+  display: none;
+}
+
+.pxp-header-actions {
+  display: grid;
+  grid-template-columns: 104px minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.pxp-select,
+.pxp-input,
+.pxp-textarea {
+  width: 100%;
+  min-width: 0;
+  min-height: 46px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  outline: none;
+  background: rgba(255, 255, 255, 0.055);
+  color: white;
+  padding: 12px 13px;
+  font-size: 15px;
+}
+
+.pxp-textarea {
+  min-height: 94px;
+  resize: vertical;
+  line-height: 1.45;
+}
+
+.pxp-select option {
+  color: #0f172a;
+}
+
+.pxp-segment {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  min-width: 0;
+}
+
+.pxp-segment-button {
+  min-width: 0;
+  min-height: 38px;
+  border: 0;
+  border-radius: 13px;
+  background: transparent;
+  color: white;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.pxp-segment-button.is-active {
+  background: var(--blue);
+  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.26);
+}
+
+.pxp-months,
+.pxp-filters {
+  display: flex;
+  gap: 8px;
+  min-width: 0;
+  overflow-x: auto;
+  padding: 2px 1px 8px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.pxp-months::-webkit-scrollbar,
+.pxp-filters::-webkit-scrollbar {
+  display: none;
+}
+
+.pxp-pill {
+  min-height: 36px;
+  flex: 0 0 auto;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.045);
+  color: white;
+  cursor: pointer;
+  padding: 8px 12px;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.pxp-pill.is-active {
+  border-color: rgba(96, 165, 250, 0.55);
+  background: var(--blue-soft);
+  color: #dbeafe;
+}
+
+/* =========================
