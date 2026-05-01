@@ -390,19 +390,19 @@ export default function HomeClient({ version }: Props) {
     }
   }
 
-  async function renameCategory(id: string, name: string) {
+  async function toggleCategory(id: string, isActive: boolean) {
     const response = await fetch("/api/categories", {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ id, name }),
+      body: JSON.stringify({ id, isActive }),
     });
 
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data?.message || "Nu am putut redenumi categoria.");
+      throw new Error(data?.message || "Nu am putut modifica categoria.");
     }
 
     if (data?.category) {
