@@ -60,3 +60,16 @@ export const DEFAULT_COLORS = [
   "rgba(244, 114, 182, 0.86)",
   "rgba(59, 130, 246, 0.86)",
 ];
+
+export const PAYMENT_CATEGORIES = [
+  "Masina",
+  "Utilitati",
+  "Mancare",
+  "Business / site",
+  "Taxe / contabilitate",
+  "Personal",
+  "Sanatate",
+  "Casa",
+  "Transport",
+  "Altele",
+];

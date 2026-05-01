@@ -20,6 +20,7 @@ type EventRow = {
   amount: string | number | null;
   actual_amount: string | number | null;
   payment_status: string | null;
+  category: string | null;
   address: string | null;
   custom_color: string | null;
   repeat_type: string | null;
@@ -84,6 +85,7 @@ function normalizeEvent(row: EventRow) {
     amount: toNumber(row.amount),
     actual_amount: toNumber(row.actual_amount),
     payment_status: row.payment_status || "none",
+    category: row.category || "",
     address: row.address || "",
     custom_color: row.custom_color || "",
     repeat_type: row.repeat_type || "none",
@@ -126,6 +128,7 @@ const EVENT_SELECT = `
     amount,
     actual_amount,
     payment_status,
+    category,
     address,
     custom_color,
     repeat_type,
@@ -211,6 +214,7 @@ export async function POST(req: Request) {
     const eventAt = String(body.eventAt || "").trim();
     const allDay = Boolean(body.allDay);
     const amount = toNumber(body.amount);
+    const category = String(body.category || "").trim();
     const address = String(body.address || "").trim();
     const customColor = String(body.customColor || "").trim();
     const repeatType = String(body.repeatType || "none").trim();
@@ -249,6 +253,7 @@ export async function POST(req: Request) {
           amount,
           actual_amount,
           payment_status,
+          category,
           address,
           custom_color,
           repeat_type,
@@ -257,7 +262,7 @@ export async function POST(req: Request) {
           custom_repeat_config
         )
         VALUES (
-          $1, $2, $3, $4, $5, $6, $7, NULL, $8, $9, $10, $11, $12, $13, $14
+          $1, $2, $3, $4, $5, $6, $7, NULL, $8, $9, $10, $11, $12, $13, $14, $15
         )
         RETURNING
           id,
@@ -270,6 +275,7 @@ export async function POST(req: Request) {
           amount,
           actual_amount,
           payment_status,
+          category,
           address,
           custom_color,
           repeat_type,
@@ -289,6 +295,7 @@ export async function POST(req: Request) {
         status,
         amount,
         paymentStatus,
+        category || null,
         address || null,
         customColor || null,
         repeatType,
@@ -340,6 +347,7 @@ export async function PATCH(req: Request) {
       const eventAt = String(body.eventAt || "").trim();
       const allDay = Boolean(body.allDay);
       const amount = toNumber(body.amount);
+      const category = String(body.category || "").trim();
       const address = String(body.address || "").trim();
       const customColor = String(body.customColor || "").trim();
       const repeatType = String(body.repeatType || "none").trim();
@@ -396,12 +404,13 @@ export async function PATCH(req: Request) {
             all_day = $6,
             amount = $7,
             payment_status = $8,
-            address = $9,
-            custom_color = $10,
-            repeat_type = $11,
-            repeat_interval = $12,
-            repeat_unit = $13,
-            custom_repeat_config = $14
+            category = $9,
+            address = $10,
+            custom_color = $11,
+            repeat_type = $12,
+            repeat_interval = $13,
+            repeat_unit = $14,
+            custom_repeat_config = $15
           WHERE id = $1
           RETURNING
             id,
@@ -414,6 +423,7 @@ export async function PATCH(req: Request) {
             amount,
             actual_amount,
             payment_status,
+            category,
             address,
             custom_color,
             repeat_type,
@@ -433,6 +443,7 @@ export async function PATCH(req: Request) {
           allDay,
           amount,
           paymentStatus,
+          category || null,
           address || null,
           customColor || null,
           repeatType,
@@ -573,6 +584,7 @@ export async function PATCH(req: Request) {
           amount,
           actual_amount,
           payment_status,
+          category,
           address,
           custom_color,
           repeat_type,

@@ -54,6 +54,7 @@ export type CalendarItem = {
   actualAmount?: number;
   paymentStatus: PaymentStatus;
 
+  category?: string;
   customColor?: string;
   address?: string;
   completedAt?: string;
@@ -77,6 +78,7 @@ export type DraftEvent = {
   repeat: RepeatType;
   customRepeat: CustomRepeatConfig;
   amount: string;
+  category: string;
   address: string;
   customColor: string;
 };

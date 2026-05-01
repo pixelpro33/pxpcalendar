@@ -106,6 +106,10 @@ export default function EventDetailsModal({
             <DetailCard label="Suma">{item.amount} lei</DetailCard>
           )}
 
+          {item.category && (
+            <DetailCard label="Categorie">{item.category}</DetailCard>
+          )}
+
           {typeof item.actualAmount === "number" && (
             <DetailCard label="Suma platita">
               {item.actualAmount} lei

@@ -1,4 +1,4 @@
-import { TYPE_CONFIG } from "./mockData";
+import { PAYMENT_CATEGORIES, TYPE_CONFIG } from "./mockData";
 import { DraftEvent, EventType } from "./types";
 import { shouldShowAmount } from "./utils";
 
@@ -190,6 +190,28 @@ export default function AddEventDrawer({
                   inputMode="decimal"
                   placeholder="Ex: 100"
                 />
+              </div>
+            )}
+
+            {draft.type === "pay" && (
+              <div className="pxp-field-card">
+                <div className="pxp-field-title">Category</div>
+
+                <select
+                  className="pxp-select"
+                  value={draft.category}
+                  onChange={(e) =>
+                    setDraft({ ...draft, category: e.target.value })
+                  }
+                >
+                  <option value="">Fara categorie</option>
+
+                  {PAYMENT_CATEGORIES.map((category) => (
+                    <option key={category} value={category}>
+                      {category}
+                    </option>
+                  ))}
+                </select>
               </div>
             )}
           </div>

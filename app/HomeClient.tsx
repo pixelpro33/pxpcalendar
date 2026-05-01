@@ -52,6 +52,7 @@ type DbEvent = {
   amount: number | null;
   actual_amount: number | null;
   payment_status: "none" | "unpaid" | "paid";
+  category: string;
   address: string;
   custom_color: string;
   repeat_type: RepeatType;
@@ -125,6 +126,7 @@ function toLocalCalendarItem(row: DbEvent): CalendarItem {
     amount: toOptionalNumber(row.amount),
     actualAmount: toOptionalNumber(row.actual_amount),
     paymentStatus: row.payment_status || "none",
+    category: row.category || undefined,
     address: row.address || undefined,
     customColor: row.custom_color || undefined,
     completedAt: row.completed_at || undefined,
@@ -146,6 +148,7 @@ function draftToApiPayload(draft: DraftEvent) {
     eventAt: draftToEventAt(draft),
     allDay: draft.allDay,
     amount,
+    category: draft.category.trim(),
     address: draft.address.trim(),
     customColor: draft.customColor.trim(),
     repeatType: draft.repeat,
@@ -176,6 +179,7 @@ function calendarItemToDraft(item: CalendarItem): DraftEvent {
         : typeof item.actualAmount === "number"
           ? String(item.actualAmount)
           : "",
+    category: item.category || "",
     address: item.address || "",
     customColor: item.customColor || "",
   };

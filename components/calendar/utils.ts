@@ -142,6 +142,7 @@ export function buildDraft(year: number, monthIndex: number): DraftEvent {
       monthlyMode: "same_day",
     },
     amount: "",
+    category: "",
     address: "",
     customColor: "",
   };
@@ -168,6 +169,7 @@ export function createItemFromDraft(draft: DraftEvent): CalendarItem {
     amount,
     actualAmount: undefined,
     paymentStatus: draft.type === "pay" ? "unpaid" : amount ? "unpaid" : "none",
+    category: draft.category.trim() || undefined,
     address: draft.address.trim() || undefined,
     customColor: draft.customColor.trim() || undefined,
     occurrences: {},
