@@ -54,9 +54,10 @@ export default function CalendarList({
               <span className="calendar-list-weekday">
                 {WEEKDAYS[date.getDay()]}
               </span>
-
               <span className="calendar-list-day">{day}</span>
             </div>
+
+            <div className="calendar-list-separator" aria-hidden="true" />
 
             <div className="calendar-list-events">
               {items.length > 0 ? (
