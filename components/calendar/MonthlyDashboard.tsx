@@ -86,6 +86,25 @@ function getChangePercent(current: number, previous: number) {
   return Math.round(((current - previous) / previous) * 100);
 }
 
+function getShortChangeLabel(current: number, previous: number) {
+  const diff = current - previous;
+  const percent = getChangePercent(current, previous);
+
+  if (previous === 0 && current > 0) {
+    return `+${formatLei(current)} lei`;
+  }
+
+  if (diff === 0) {
+    return "0 lei";
+  }
+
+  if (percent === null) {
+    return formatSignedLei(diff);
+  }
+
+  return `${formatSignedLei(diff)} / ${percent > 0 ? "+" : ""}${percent}%`;
+}
+
 function getChangeLabel(current: number, previous: number) {
   const diff = current - previous;
   const percent = getChangePercent(current, previous);
@@ -207,57 +226,210 @@ function SummaryCard({
   );
 }
 
-function DonutBlock({
+function DashboardSummary({
+  totalPaid,
+  totalRemaining,
+  totalMonth,
+  previousPaid,
+  previousRemaining,
+  previousMonthTotal,
+}: {
+  totalPaid: number;
+  totalRemaining: number;
+  totalMonth: number;
+  previousPaid: number;
+  previousRemaining: number;
+  previousMonthTotal: number;
+}) {
+  const paidChangeClass = getChangeClass(totalPaid, previousPaid);
+  const plannedChangeClass = getChangeClass(totalMonth, previousMonthTotal);
+
+  return (
+    <div className="pxp-dashboard-summary">
+      <SummaryCard
+        label="Cheltuit"
+        value={`${formatLei(totalPaid)} lei`}
+        helper={getShortChangeLabel(totalPaid, previousPaid)}
+        tone={
+          paidChangeClass === "is-up"
+            ? "up"
+            : paidChangeClass === "is-down"
+              ? "down"
+              : "flat"
+        }
+      />
+
+      <SummaryCard
+        label="Ramas"
+        value={`${formatLei(totalRemaining)} lei`}
+        helper={`Luna trecuta: ${formatLei(previousRemaining)} lei`}
+      />
+
+      <SummaryCard
+        label="Total luna"
+        value={`${formatLei(totalMonth)} lei`}
+        helper={getShortChangeLabel(totalMonth, previousMonthTotal)}
+        tone={
+          plannedChangeClass === "is-up"
+            ? "up"
+            : plannedChangeClass === "is-down"
+              ? "down"
+              : "flat"
+        }
+      />
+    </div>
+  );
+}
+
+function ChartView({
   rows,
   totalMonth,
   totalPaid,
   totalRemaining,
+  previousPaid,
 }: {
   rows: CategoryRow[];
   totalMonth: number;
   totalPaid: number;
   totalRemaining: number;
+  previousPaid: number;
+}) {
+  const paidChangeClass = getChangeClass(totalPaid, previousPaid);
+
+  return (
+    <>
+      <div className="pxp-dashboard-chart-panel">
+        <div
+          className="pxp-dashboard-donut"
+          style={{ background: buildDonutGradient(rows, totalMonth) }}
+        >
+          <div className="pxp-dashboard-donut-inner">
+            <span>Total</span>
+            <strong>{formatLei(totalMonth)}</strong>
+            <small>lei</small>
+          </div>
+        </div>
+
+        <div className="pxp-dashboard-chart-side">
+          <div className="pxp-dashboard-chart-mini">
+            <div>
+              <span>Platit</span>
+              <strong>{formatLei(totalPaid)} lei</strong>
+            </div>
+
+            <div>
+              <span>Ramas</span>
+              <strong>{formatLei(totalRemaining)} lei</strong>
+            </div>
+          </div>
+
+          <div className={`pxp-category-change ${paidChangeClass}`}>
+            {getChangeLabel(totalPaid, previousPaid)}
+          </div>
+
+          <div className="pxp-dashboard-chart-legend">
+            {rows.map((row, index) => {
+              const percent = getPercent(row.total, totalMonth);
+              const color = CHART_COLORS[index % CHART_COLORS.length];
+
+              return (
+                <div key={row.category} className="pxp-chart-legend-row">
+                  <i style={{ background: color }} />
+                  <span>{row.category}</span>
+                  <b>{percent}%</b>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function ListView({
+  rows,
+  totalMonth,
+}: {
+  rows: CategoryRow[];
+  totalMonth: number;
 }) {
   return (
-    <div className="pxp-dashboard-chart-panel">
-      <div
-        className="pxp-dashboard-donut"
-        style={{ background: buildDonutGradient(rows, totalMonth) }}
-      >
-        <div className="pxp-dashboard-donut-inner">
-          <span>Total</span>
-          <strong>{formatLei(totalMonth)}</strong>
-          <small>lei</small>
+    <div className="pxp-category-list">
+      {rows.map((row) => {
+        const percent = getPercent(row.total, totalMonth);
+        const changeClass = getChangeClass(row.paid, row.previousPaid);
+
+        return (
+          <div key={row.category} className="pxp-category-row">
+            <div className="pxp-category-top">
+              <div>
+                <div className="pxp-category-name">{row.category}</div>
+                <div className="pxp-category-meta">
+                  {row.count} {row.count === 1 ? "intrare" : "intrari"} •{" "}
+                  {percent}% din luna
+                </div>
+              </div>
+
+              <div className="pxp-category-total">
+                {formatLei(row.total)} lei
+              </div>
+            </div>
+
+            <div className="pxp-category-bar">
+              <span style={{ width: `${percent}%` }} />
+            </div>
+
+            <div className="pxp-category-bottom">
+              <span>Platit: {formatLei(row.paid)} lei</span>
+              <span>Ramas: {formatLei(row.remaining)} lei</span>
+            </div>
+
+            <div className={`pxp-category-change ${changeClass}`}>
+              {getChangeLabel(row.paid, row.previousPaid)}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function TopItems({ items }: { items: CalendarItem[] }) {
+  const topItems = [...items]
+    .sort((a, b) => {
+      const aValue = getPaidAmount(a) + getRemainingAmount(a);
+      const bValue = getPaidAmount(b) + getRemainingAmount(b);
+      return bValue - aValue;
+    })
+    .slice(0, 5);
+
+  if (topItems.length === 0) return null;
+
+  return (
+    <div className="pxp-dashboard-top-list">
+      <div className="pxp-dashboard-view-row">
+        <div>
+          <div className="pxp-dashboard-kicker">Top luna</div>
+          <h3 className="pxp-dashboard-subtitle">Cele mai mari intrari</h3>
         </div>
       </div>
 
-      <div className="pxp-dashboard-chart-side">
-        <div className="pxp-dashboard-chart-mini">
-          <div>
-            <span>Platit</span>
-            <strong>{formatLei(totalPaid)} lei</strong>
-          </div>
+      <div className="pxp-dashboard-top-items">
+        {topItems.map((item) => {
+          const value = getPaidAmount(item) + getRemainingAmount(item);
 
-          <div>
-            <span>Ramas</span>
-            <strong>{formatLei(totalRemaining)} lei</strong>
-          </div>
-        </div>
-
-        <div className="pxp-dashboard-chart-legend">
-          {rows.map((row, index) => {
-            const percent = getPercent(row.total, totalMonth);
-            const color = CHART_COLORS[index % CHART_COLORS.length];
-
-            return (
-              <div key={row.category} className="pxp-chart-legend-row">
-                <i style={{ background: color }} />
-                <span>{row.category}</span>
-                <b>{percent}%</b>
+          return (
+            <div key={item.id} className="pxp-dashboard-top-item">
+              <div>
+                <strong>{item.title}</strong>
+                <span>{item.category || "Fara categorie"}</span>
               </div>
-            );
-          })}
-        </div>
+
+              <b>{formatLei(value)} lei</b>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -283,17 +455,6 @@ export default function MonthlyDashboard({
   );
   const previousMonthTotal = previousPaid + previousRemaining;
 
-  const paidChangeClass = getChangeClass(totalPaid, previousPaid);
-  const plannedChangeClass = getChangeClass(totalMonth, previousMonthTotal);
-
-  const topItems = [...moneyItems]
-    .sort((a, b) => {
-      const aValue = getPaidAmount(a) + getRemainingAmount(a);
-      const bValue = getPaidAmount(b) + getRemainingAmount(b);
-      return bValue - aValue;
-    })
-    .slice(0, 5);
-
   if (moneyItems.length === 0 && previousMoneyItems.length === 0) {
     return (
       <section className="pxp-dashboard">
@@ -317,7 +478,9 @@ export default function MonthlyDashboard({
       <div className="pxp-dashboard-head">
         <div>
           <div className="pxp-dashboard-kicker">Dashboard lunar</div>
-          <h2 className="pxp-dashboard-title">Rezumat financiar</h2>
+          <h2 className="pxp-dashboard-title">
+            {viewMode === "chart" ? "Grafic cheltuieli" : "Lista cheltuieli"}
+          </h2>
         </div>
 
         <div className="pxp-dashboard-count">
@@ -325,187 +488,28 @@ export default function MonthlyDashboard({
         </div>
       </div>
 
-      <div className="pxp-dashboard-summary">
-        <SummaryCard
-          label="Cheltuit"
-          value={`${formatLei(totalPaid)} lei`}
-          helper={getChangeLabel(totalPaid, previousPaid)}
-          tone={
-            paidChangeClass === "is-up"
-              ? "up"
-              : paidChangeClass === "is-down"
-                ? "down"
-                : "flat"
-          }
-        />
-
-        <SummaryCard
-          label="Ramas"
-          value={`${formatLei(totalRemaining)} lei`}
-          helper={`Luna trecuta: ${formatLei(previousRemaining)} lei`}
-        />
-
-        <SummaryCard
-          label="Total planificat"
-          value={`${formatLei(totalMonth)} lei`}
-          helper={getChangeLabel(totalMonth, previousMonthTotal)}
-          tone={
-            plannedChangeClass === "is-up"
-              ? "up"
-              : plannedChangeClass === "is-down"
-                ? "down"
-                : "flat"
-          }
-        />
-      </div>
-
-      <div className="pxp-dashboard-comparison">
-        <div>
-          <span>Luna curenta</span>
-          <strong>{formatLei(totalPaid)} lei cheltuiti</strong>
-        </div>
-
-        <div>
-          <span>Luna trecuta</span>
-          <strong>{formatLei(previousPaid)} lei cheltuiti</strong>
-        </div>
-
-        <div className={paidChangeClass}>
-          <span>Diferenta</span>
-          <strong>{getChangeLabel(totalPaid, previousPaid)}</strong>
-        </div>
-      </div>
-
-      <DonutBlock
-        rows={rows}
-        totalMonth={totalMonth}
+      <DashboardSummary
         totalPaid={totalPaid}
         totalRemaining={totalRemaining}
+        totalMonth={totalMonth}
+        previousPaid={previousPaid}
+        previousRemaining={previousRemaining}
+        previousMonthTotal={previousMonthTotal}
       />
 
-      <div className="pxp-dashboard-view-row">
-        <div>
-          <div className="pxp-dashboard-kicker">
-            {viewMode === "chart" ? "Categorii" : "Lista categorii"}
-          </div>
-          <h3 className="pxp-dashboard-subtitle">
-            {viewMode === "chart"
-              ? "Carduri cu procente"
-              : "Distribuire cheltuieli"}
-          </h3>
-        </div>
-      </div>
-
       {viewMode === "chart" ? (
-        <div className="pxp-dashboard-category-cards">
-          {rows.map((row) => {
-            const percent = getPercent(row.total, totalMonth);
-            const paidPercent = getPercent(row.paid, row.total);
-            const changeClass = getChangeClass(row.paid, row.previousPaid);
-
-            return (
-              <article
-                key={row.category}
-                className="pxp-dashboard-category-card"
-              >
-                <div className="pxp-category-card-top">
-                  <div>
-                    <div className="pxp-category-name">{row.category}</div>
-                    <div className="pxp-category-meta">
-                      {row.count} {row.count === 1 ? "intrare" : "intrari"} •{" "}
-                      {percent}% din luna
-                    </div>
-                  </div>
-
-                  <div className="pxp-category-percent">{percent}%</div>
-                </div>
-
-                <div className="pxp-category-card-total">
-                  {formatLei(row.total)} lei
-                </div>
-
-                <div className="pxp-category-bar">
-                  <span style={{ width: `${percent}%` }} />
-                </div>
-
-                <div className="pxp-category-split">
-                  <span>Platit: {formatLei(row.paid)} lei</span>
-                  <span>{paidPercent}% platit</span>
-                </div>
-
-                <div className={`pxp-category-change ${changeClass}`}>
-                  {getChangeLabel(row.paid, row.previousPaid)}
-                </div>
-              </article>
-            );
-          })}
-        </div>
+        <ChartView
+          rows={rows}
+          totalMonth={totalMonth}
+          totalPaid={totalPaid}
+          totalRemaining={totalRemaining}
+          previousPaid={previousPaid}
+        />
       ) : (
-        <div className="pxp-category-list">
-          {rows.map((row) => {
-            const percent = getPercent(row.total, totalMonth);
-            const changeClass = getChangeClass(row.paid, row.previousPaid);
-
-            return (
-              <div key={row.category} className="pxp-category-row">
-                <div className="pxp-category-top">
-                  <div>
-                    <div className="pxp-category-name">{row.category}</div>
-                    <div className="pxp-category-meta">
-                      {row.count} {row.count === 1 ? "intrare" : "intrari"} •{" "}
-                      {percent}% din luna
-                    </div>
-                  </div>
-
-                  <div className="pxp-category-total">
-                    {formatLei(row.total)} lei
-                  </div>
-                </div>
-
-                <div className="pxp-category-bar">
-                  <span style={{ width: `${percent}%` }} />
-                </div>
-
-                <div className="pxp-category-bottom">
-                  <span>Platit: {formatLei(row.paid)} lei</span>
-                  <span>Ramas: {formatLei(row.remaining)} lei</span>
-                </div>
-
-                <div className={`pxp-category-change ${changeClass}`}>
-                  {getChangeLabel(row.paid, row.previousPaid)}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {topItems.length > 0 && (
-        <div className="pxp-dashboard-top-list">
-          <div className="pxp-dashboard-view-row">
-            <div>
-              <div className="pxp-dashboard-kicker">Top luna</div>
-              <h3 className="pxp-dashboard-subtitle">Cele mai mari intrari</h3>
-            </div>
-          </div>
-
-          <div className="pxp-dashboard-top-items">
-            {topItems.map((item) => {
-              const value = getPaidAmount(item) + getRemainingAmount(item);
-
-              return (
-                <div key={item.id} className="pxp-dashboard-top-item">
-                  <div>
-                    <strong>{item.title}</strong>
-                    <span>{item.category || "Fara categorie"}</span>
-                  </div>
-
-                  <b>{formatLei(value)} lei</b>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+        <>
+          <ListView rows={rows} totalMonth={totalMonth} />
+          <TopItems items={moneyItems} />
+        </>
       )}
     </section>
   );
