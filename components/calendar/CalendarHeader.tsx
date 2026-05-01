@@ -4,7 +4,7 @@ import { ViewMode } from "./types";
 import { DashboardViewMode } from "./MonthlyDashboard";
 
 export default function CalendarHeader({
-  version,
+  version: _version,
   selectedYear,
   setSelectedYear,
   selectedMonth,
@@ -16,6 +16,7 @@ export default function CalendarHeader({
   years,
   activeSection,
   setActiveSection,
+  onOpenAddMenu,
 }: {
   version: string;
   selectedYear: number;
@@ -29,6 +30,7 @@ export default function CalendarHeader({
   years: number[];
   activeSection: AppSection;
   setActiveSection: (section: AppSection) => void;
+  onOpenAddMenu: () => void;
 }) {
   const showDateControls =
     activeSection === "calendar" || activeSection === "dashboard";
@@ -36,10 +38,14 @@ export default function CalendarHeader({
   return (
     <header className="pxp-header">
       <div className="pxp-header-title-row">
-        <div>
-          <div className="pxp-title">pxpcalendar</div>
-          <div className="pxp-subtitle">iOS dark UI preview · v{version}</div>
-        </div>
+        <button
+          type="button"
+          className="pxp-header-action-button plus"
+          onClick={onOpenAddMenu}
+          aria-label="Open add menu"
+        >
+          +
+        </button>
 
         <div className="pxp-header-menu-slot">
           <AppNavigation

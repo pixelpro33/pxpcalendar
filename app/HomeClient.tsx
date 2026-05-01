@@ -2,6 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import AddEventDrawer from "@/components/calendar/AddEventDrawer";
+import AddExpenseDrawer, {
+  buildExpenseDraft,
+  ExpenseDraft,
+} from "@/components/calendar/AddExpenseDrawer";
+import AddQuickMenu from "@/components/calendar/AddQuickMenu";
 import AppNavigation, { AppSection } from "@/components/calendar/AppNavigation";
 import CalendarFilters from "@/components/calendar/CalendarFilters";
 import CalendarGrid from "@/components/calendar/CalendarGrid";
@@ -9,11 +14,9 @@ import CalendarHeader from "@/components/calendar/CalendarHeader";
 import CalendarList from "@/components/calendar/CalendarList";
 import CalendarStats from "@/components/calendar/CalendarStats";
 import EventDetailsModal from "@/components/calendar/EventDetailsModal";
-
 import MonthlyDashboard, {
   DashboardViewMode,
 } from "@/components/calendar/MonthlyDashboard";
-
 import CategoriesPanel, {
   PaymentCategory,
 } from "@/components/calendar/CategoriesPanel";
@@ -27,6 +30,7 @@ import {
   getDaysInMonth,
   getMonthPayTotals,
 } from "@/components/calendar/utils";
+
 import {
   CalendarItem,
   DraftEvent,
@@ -266,12 +270,18 @@ export default function HomeClient({ version }: Props) {
 
   const [hideEmptyDays, setHideEmptyDays] = useState(false);
 
+  const [showAddMenu, setShowAddMenu] = useState(false);
   const [showAddDrawer, setShowAddDrawer] = useState(false);
+  const [showExpenseDrawer, setShowExpenseDrawer] = useState(false);
+
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
 
   const [draft, setDraft] = useState<DraftEvent>(
     buildDraft(today.getFullYear(), today.getMonth()),
   );
+
+  const [expenseDraft, setExpenseDraft] =
+    useState<ExpenseDraft>(buildExpenseDraft());
 
   useEffect(() => {
     let cancelled = false;
@@ -525,10 +535,25 @@ export default function HomeClient({ version }: Props) {
     }));
   }
 
+  function openAddMenu() {
+    setShowAddMenu(true);
+  }
+
   function openAddDrawer() {
     setEditingItemId(null);
     setDraft(buildDraft(selectedYear, selectedMonth));
     setShowAddDrawer(true);
+  }
+
+  function openAddEventFromMenu() {
+    setShowAddMenu(false);
+    openAddDrawer();
+  }
+
+  function openAddExpenseFromMenu() {
+    setShowAddMenu(false);
+    setExpenseDraft(buildExpenseDraft());
+    setShowExpenseDrawer(true);
   }
 
   function openEditDrawer(item: CalendarItem) {
@@ -543,6 +568,45 @@ export default function HomeClient({ version }: Props) {
       setDraft(nextDraft);
       setShowAddDrawer(true);
     });
+  }
+
+  async function saveExpense() {
+    if (!expenseDraft.title.trim()) {
+      setEventsError("Titlul cheltuielii lipseste.");
+      return;
+    }
+
+    if (!expenseDraft.amount.trim() || Number(expenseDraft.amount) <= 0) {
+      setEventsError("Suma trebuie sa fie mai mare decat 0.");
+      return;
+    }
+
+    try {
+      setEventsError("");
+
+      const response = await fetch("/api/expenses", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(expenseDraft),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data?.message || "Nu am putut salva cheltuiala.");
+      }
+
+      setShowExpenseDrawer(false);
+      setExpenseDraft(buildExpenseDraft());
+    } catch (error) {
+      setEventsError(
+        error instanceof Error
+          ? error.message
+          : "Nu am putut salva cheltuiala.",
+      );
+    }
   }
 
   async function saveDraftItem() {
@@ -856,6 +920,7 @@ export default function HomeClient({ version }: Props) {
           years={years}
           activeSection={activeSection}
           setActiveSection={setActiveSection}
+          onOpenAddMenu={openAddMenu}
         />
 
         <AppNavigation
@@ -924,18 +989,16 @@ export default function HomeClient({ version }: Props) {
         )}
 
         {activeSection === "whatsapp" && <WhatsAppPanel />}
+
+        <footer className="pxp-footer-version">v{version}</footer>
       </div>
 
-      {activeSection === "calendar" && (
-        <button
-          className="pxp-fab"
-          onClick={openAddDrawer}
-          aria-label="Add event"
-          type="button"
-        >
-          +
-        </button>
-      )}
+      <AddQuickMenu
+        open={showAddMenu}
+        onClose={() => setShowAddMenu(false)}
+        onAddEvent={openAddEventFromMenu}
+        onAddExpense={openAddExpenseFromMenu}
+      />
 
       <AddEventDrawer
         open={showAddDrawer}
@@ -948,6 +1011,15 @@ export default function HomeClient({ version }: Props) {
         onSave={saveDraftItem}
         categories={activeCategoryNames}
         mode={editingItemId ? "edit" : "add"}
+      />
+
+      <AddExpenseDrawer
+        open={showExpenseDrawer}
+        draft={expenseDraft}
+        setDraft={setExpenseDraft}
+        categories={activeCategoryNames}
+        onClose={() => setShowExpenseDrawer(false)}
+        onSave={saveExpense}
       />
 
       <EventDetailsModal
