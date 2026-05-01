@@ -987,9 +987,9 @@ async function getExpenseSummary(baseToday: string) {
   const row = result.rows[0];
 
   return {
-    spentToday: toNumber(row?.spent_today),
-    spentYesterday: toNumber(row?.spent_yesterday),
-    spentMonth: toNumber(row?.spent_month),
+    spentToday: toNumber(row?.spent_today) || 0,
+    spentYesterday: toNumber(row?.spent_yesterday) || 0,
+    spentMonth: toNumber(row?.spent_month) || 0,
   };
 }
 
