@@ -10,6 +10,7 @@ export default function AddEventDrawer({
   onSave,
   onOpenRepeat,
   onOpenColor,
+  mode = "add",
 }: {
   open: boolean;
   draft: DraftEvent;
@@ -18,8 +19,12 @@ export default function AddEventDrawer({
   onSave: () => void;
   onOpenRepeat: () => void;
   onOpenColor: () => void;
+  mode?: "add" | "edit";
 }) {
   if (!open) return null;
+
+  const titlePlaceholder = mode === "edit" ? "Edit title" : "Add title";
+  const saveLabel = mode === "edit" ? "Update" : "Save";
 
   return (
     <div className="pxp-overlay" onClick={onClose}>
@@ -32,7 +37,7 @@ export default function AddEventDrawer({
           </button>
 
           <button className="pxp-link-button" onClick={onSave} type="button">
-            Save
+            {saveLabel}
           </button>
         </div>
 
@@ -41,7 +46,7 @@ export default function AddEventDrawer({
             className="pxp-sheet-title-input"
             value={draft.title}
             onChange={(e) => setDraft({ ...draft, title: e.target.value })}
-            placeholder="Add title"
+            placeholder={titlePlaceholder}
           />
 
           <div className="pxp-type-grid">
@@ -56,9 +61,9 @@ export default function AddEventDrawer({
                   onClick={() => setDraft({ ...draft, type })}
                   type="button"
                   style={{
-                    borderColor: active ? cfg.border : undefined,
-                    background: active ? cfg.bg : undefined,
-                    color: active ? cfg.color : undefined,
+                    borderColor: active ? cfg.border : "var(--border-strong)",
+                    background: active ? cfg.bg : "rgba(255,255,255,0.045)",
+                    color: active ? cfg.color : "white",
                   }}
                 >
                   {cfg.icon} {cfg.label}
@@ -70,35 +75,43 @@ export default function AddEventDrawer({
           <div className="pxp-form-grid">
             <div className="pxp-field-card">
               <div className="pxp-field-title">Details</div>
+
               <textarea
                 className="pxp-textarea"
                 value={draft.details}
-                onChange={(e) => setDraft({ ...draft, details: e.target.value })}
+                onChange={(e) =>
+                  setDraft({ ...draft, details: e.target.value })
+                }
                 placeholder="Add details"
                 rows={3}
               />
             </div>
 
-            <div className="pxp-field-card pxp-row-between">
-              <div>
-                <div style={{ fontWeight: 800, marginBottom: 4 }}>All day</div>
-                <div style={{ color: "var(--muted)", fontSize: 13, lineHeight: 1.35 }}>
-                  Daca e o zi intreaga, fara ora fixa
+            <div className="pxp-field-card">
+              <div className="pxp-row-between">
+                <div>
+                  <div style={{ fontWeight: 750, marginBottom: 4 }}>
+                    All day
+                  </div>
+                  <div style={{ opacity: 0.62, fontSize: 14 }}>
+                    Daca e o zi intreaga, fara ora fixa
+                  </div>
                 </div>
-              </div>
 
-              <button
-                className={`pxp-toggle ${draft.allDay ? "is-on" : ""}`}
-                onClick={() => setDraft({ ...draft, allDay: !draft.allDay })}
-                type="button"
-                aria-label="Toggle all day"
-              >
-                <span className="pxp-toggle-dot" />
-              </button>
+                <button
+                  className={`pxp-toggle ${draft.allDay ? "is-on" : ""}`}
+                  onClick={() => setDraft({ ...draft, allDay: !draft.allDay })}
+                  type="button"
+                  aria-label="Toggle all day"
+                >
+                  <span className="pxp-toggle-dot" />
+                </button>
+              </div>
             </div>
 
             <div className="pxp-field-card">
               <div className="pxp-field-title">Date & time</div>
+
               <div className="pxp-date-time-grid">
                 <input
                   className="pxp-input"
@@ -112,62 +125,73 @@ export default function AddEventDrawer({
                     className="pxp-input"
                     type="time"
                     value={draft.time}
-                    onChange={(e) => setDraft({ ...draft, time: e.target.value })}
+                    onChange={(e) =>
+                      setDraft({ ...draft, time: e.target.value })
+                    }
                   />
                 )}
               </div>
             </div>
 
-            <button className="pxp-action-card" onClick={onOpenRepeat} type="button">
+            <button
+              className="pxp-action-card"
+              onClick={onOpenRepeat}
+              type="button"
+            >
               <div className="pxp-field-title">Repeat</div>
-              <div>
-                {draft.repeat === "custom"
-                  ? `Custom: every ${draft.customRepeat.interval} ${draft.customRepeat.unit}${
-                      draft.customRepeat.interval > 1 ? "s" : ""
-                    }`
-                  : draft.repeat}
+              <div style={{ fontWeight: 800 }}>{draft.repeat}</div>
+            </button>
+
+            <button
+              className="pxp-action-card"
+              onClick={onOpenColor}
+              type="button"
+            >
+              <div className="pxp-field-title">Custom color</div>
+
+              <div className="pxp-color-preview-row">
+                <span
+                  className="pxp-color-preview"
+                  style={{
+                    background: draft.customColor || "rgba(255,255,255,0.08)",
+                  }}
+                />
+                <span style={{ opacity: 0.75 }}>
+                  {draft.customColor || "Default color"}
+                </span>
               </div>
             </button>
+
+            <div className="pxp-field-card">
+              <div className="pxp-field-title">Address / location</div>
+
+              <input
+                className="pxp-input"
+                value={draft.address}
+                onChange={(e) =>
+                  setDraft({ ...draft, address: e.target.value })
+                }
+                placeholder="Optional address or map link"
+              />
+            </div>
 
             {shouldShowAmount(draft.type) && (
               <div className="pxp-field-card">
                 <div className="pxp-field-title">
-                  {draft.type === "pay" ? "Suma obligatorie (lei)" : "Suma optionala (lei)"}
+                  {draft.type === "pay" ? "Amount required" : "Amount optional"}
                 </div>
+
                 <input
                   className="pxp-input"
-                  type="number"
-                  inputMode="decimal"
-                  min="0"
                   value={draft.amount}
-                  onChange={(e) => setDraft({ ...draft, amount: e.target.value })}
-                  placeholder="Ex: 220"
+                  onChange={(e) =>
+                    setDraft({ ...draft, amount: e.target.value })
+                  }
+                  inputMode="decimal"
+                  placeholder="Ex: 100"
                 />
               </div>
             )}
-
-            <div className="pxp-field-card">
-              <div className="pxp-field-title">Adresa</div>
-              <input
-                className="pxp-input"
-                value={draft.address}
-                onChange={(e) => setDraft({ ...draft, address: e.target.value })}
-                placeholder="Optional"
-              />
-            </div>
-
-            <button className="pxp-action-card" onClick={onOpenColor} type="button">
-              <div className="pxp-field-title">Custom color</div>
-              <div className="pxp-color-preview-row">
-                <div
-                  className="pxp-color-preview"
-                  style={{ background: draft.customColor || undefined }}
-                />
-                <div style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis" }}>
-                  {draft.customColor || "Choose default or custom color"}
-                </div>
-              </div>
-            </button>
           </div>
         </div>
       </section>

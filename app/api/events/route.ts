@@ -65,30 +65,34 @@ function getPaymentStatus(type: string, amount: number | null, status: string) {
   return "none";
 }
 
+const EVENT_SELECT = `
+  SELECT
+    id,
+    title,
+    details,
+    type,
+    event_at,
+    all_day,
+    status,
+    amount,
+    actual_amount,
+    payment_status,
+    address,
+    custom_color,
+    repeat_type,
+    repeat_interval,
+    repeat_unit,
+    custom_repeat_config,
+    completed_at,
+    created_at,
+    updated_at
+  FROM events
+`;
+
 export async function GET() {
   try {
     const result = await db.query<EventRow>(`
-      SELECT
-        id,
-        title,
-        details,
-        type,
-        event_at,
-        all_day,
-        status,
-        amount,
-        actual_amount,
-        payment_status,
-        address,
-        custom_color,
-        repeat_type,
-        repeat_interval,
-        repeat_unit,
-        custom_repeat_config,
-        completed_at,
-        created_at,
-        updated_at
-      FROM events
+      ${EVENT_SELECT}
       ORDER BY event_at ASC, created_at DESC
     `);
 
@@ -120,6 +124,7 @@ export async function POST(req: Request) {
     const address = String(body.address || "").trim();
     const customColor = String(body.customColor || "").trim();
     const repeatType = String(body.repeatType || "none").trim();
+
     const customRepeatConfig =
       repeatType === "custom" ? body.customRepeatConfig || null : null;
 
@@ -226,10 +231,137 @@ export async function PATCH(req: Request) {
     const body = await req.json();
 
     const id = String(body.id || "").trim();
+    const action = String(body.action || "status").trim();
+
+    if (!id) {
+      return Response.json(
+        {
+          error: true,
+          message: "ID lipsa.",
+        },
+        { status: 400 },
+      );
+    }
+
+    if (action === "update") {
+      const title = String(body.title || "").trim();
+      const details = String(body.details || "").trim();
+      const type = String(body.type || "event").trim();
+      const eventAt = String(body.eventAt || "").trim();
+      const allDay = Boolean(body.allDay);
+      const amount = toNumber(body.amount);
+      const address = String(body.address || "").trim();
+      const customColor = String(body.customColor || "").trim();
+      const repeatType = String(body.repeatType || "none").trim();
+
+      const customRepeatConfig =
+        repeatType === "custom" ? body.customRepeatConfig || null : null;
+
+      const repeatInterval =
+        repeatType === "custom" ? toNumber(body.repeatInterval) || 1 : null;
+
+      const repeatUnit =
+        repeatType === "custom" ? String(body.repeatUnit || "week") : null;
+
+      if (!title || !eventAt) {
+        return Response.json(
+          {
+            error: true,
+            message: "Titlul sau data/ora lipsesc.",
+          },
+          { status: 400 },
+        );
+      }
+
+      const current = await db.query<EventRow>(
+        `
+          ${EVENT_SELECT}
+          WHERE id = $1
+          LIMIT 1
+        `,
+        [id],
+      );
+
+      if (current.rowCount === 0) {
+        return Response.json(
+          {
+            error: true,
+            message: "Evenimentul nu exista.",
+          },
+          { status: 404 },
+        );
+      }
+
+      const currentStatus = current.rows[0].status || "pending";
+      const paymentStatus = getPaymentStatus(type, amount, currentStatus);
+
+      const result = await db.query<EventRow>(
+        `
+          UPDATE events
+          SET
+            title = $2,
+            details = $3,
+            type = $4,
+            event_at = $5,
+            all_day = $6,
+            amount = $7,
+            payment_status = $8,
+            address = $9,
+            custom_color = $10,
+            repeat_type = $11,
+            repeat_interval = $12,
+            repeat_unit = $13,
+            custom_repeat_config = $14
+          WHERE id = $1
+          RETURNING
+            id,
+            title,
+            details,
+            type,
+            event_at,
+            all_day,
+            status,
+            amount,
+            actual_amount,
+            payment_status,
+            address,
+            custom_color,
+            repeat_type,
+            repeat_interval,
+            repeat_unit,
+            custom_repeat_config,
+            completed_at,
+            created_at,
+            updated_at
+        `,
+        [
+          id,
+          title,
+          details || null,
+          type,
+          eventAt,
+          allDay,
+          amount,
+          paymentStatus,
+          address || null,
+          customColor || null,
+          repeatType,
+          repeatInterval,
+          repeatUnit,
+          customRepeatConfig ? JSON.stringify(customRepeatConfig) : null,
+        ],
+      );
+
+      return Response.json({
+        success: true,
+        event: normalizeEvent(result.rows[0]),
+      });
+    }
+
     const status = String(body.status || "").trim();
     const actualAmount = toNumber(body.actualAmount);
 
-    if (!id || !["pending", "completed"].includes(status)) {
+    if (!["pending", "completed"].includes(status)) {
       return Response.json(
         {
           error: true,
@@ -241,27 +373,7 @@ export async function PATCH(req: Request) {
 
     const existing = await db.query<EventRow>(
       `
-        SELECT
-          id,
-          title,
-          details,
-          type,
-          event_at,
-          all_day,
-          status,
-          amount,
-          actual_amount,
-          payment_status,
-          address,
-          custom_color,
-          repeat_type,
-          repeat_interval,
-          repeat_unit,
-          custom_repeat_config,
-          completed_at,
-          created_at,
-          updated_at
-        FROM events
+        ${EVENT_SELECT}
         WHERE id = $1
         LIMIT 1
       `,

@@ -3,10 +3,6 @@ import { CalendarItem } from "./types";
 import { TYPE_CONFIG } from "./mockData";
 import { formatEventDate, getDaysRemaining, getRepeatLabel } from "./utils";
 
-function SectionTitle({ children }: { children: ReactNode }) {
-  return <div className="pxp-section-label">{children}</div>;
-}
-
 function DetailCard({
   label,
   children,
@@ -18,10 +14,14 @@ function DetailCard({
 }) {
   return (
     <div className={`pxp-detail-card ${wide ? "is-wide" : ""}`}>
-      <SectionTitle>{label}</SectionTitle>
+      <div className="pxp-section-label">{label}</div>
       <div className="pxp-detail-value">{children}</div>
     </div>
   );
+}
+
+function getBaseId(item: CalendarItem) {
+  return item.baseId || item.id;
 }
 
 export default function EventDetailsModal({
@@ -29,15 +29,18 @@ export default function EventDetailsModal({
   onClose,
   onToggleComplete,
   onDelete,
+  onEdit,
 }: {
   item: CalendarItem | null;
   onClose: () => void;
   onToggleComplete: (id: string) => void;
   onDelete: (id: string) => void;
+  onEdit: (item: CalendarItem) => void;
 }) {
   if (!item) return null;
 
   const cfg = TYPE_CONFIG[item.type];
+  const baseId = getBaseId(item);
 
   return (
     <div className="pxp-overlay" onClick={onClose}>
@@ -48,7 +51,11 @@ export default function EventDetailsModal({
           <div style={{ minWidth: 0 }}>
             <div
               className="pxp-type-badge"
-              style={{ background: cfg.bg, border: `1px solid ${cfg.border}`, color: cfg.color }}
+              style={{
+                background: cfg.bg,
+                border: `1px solid ${cfg.border}`,
+                color: cfg.color,
+              }}
             >
               <span>{cfg.icon}</span>
               <span>{cfg.label}</span>
@@ -64,25 +71,50 @@ export default function EventDetailsModal({
               {item.title}
             </div>
 
-            <div className="pxp-detail-subtitle">{getDaysRemaining(item)}</div>
+            <div className="pxp-detail-subtitle">
+              {getDaysRemaining(item)}
+              {item.isOccurrence ? " • repetare" : ""}
+            </div>
           </div>
 
-          <button className="pxp-icon-button" onClick={onClose} type="button" aria-label="Close">
+          <button
+            className="pxp-icon-button"
+            onClick={onClose}
+            type="button"
+            aria-label="Close"
+          >
             ✕
           </button>
         </div>
 
         <div className="pxp-details-grid">
           <DetailCard label="Data">{formatEventDate(item)}</DetailCard>
-          <DetailCard label="Status">{item.completed ? "Completed" : "Pending"}</DetailCard>
+
+          <DetailCard label="Status">
+            {item.completed ? "Completed" : "Pending"}
+          </DetailCard>
+
           <DetailCard label="All day">{item.allDay ? "Da" : "Nu"}</DetailCard>
+
           <DetailCard label="Repeat">{getRepeatLabel(item)}</DetailCard>
+
+          {item.paymentStatus && item.paymentStatus !== "none" && (
+            <DetailCard label="Payment status">{item.paymentStatus}</DetailCard>
+          )}
 
           {typeof item.amount === "number" && (
             <DetailCard label="Suma">{item.amount} lei</DetailCard>
           )}
 
-          {item.address && <DetailCard label="Adresa">{item.address}</DetailCard>}
+          {typeof item.actualAmount === "number" && (
+            <DetailCard label="Suma platita">
+              {item.actualAmount} lei
+            </DetailCard>
+          )}
+
+          {item.address && (
+            <DetailCard label="Adresa">{item.address}</DetailCard>
+          )}
 
           {item.details && (
             <DetailCard label="Detalii" wide>
@@ -93,19 +125,23 @@ export default function EventDetailsModal({
           <div className="pxp-actions-grid">
             <button
               className={`pxp-action ${item.completed ? "warning" : "success"}`}
-              onClick={() => onToggleComplete(item.id)}
+              onClick={() => onToggleComplete(baseId)}
               type="button"
             >
               {item.completed ? "Mark pending" : "Mark completed"}
             </button>
 
-            <button className="pxp-action neutral" type="button">
+            <button
+              className="pxp-action neutral"
+              onClick={() => onEdit(item)}
+              type="button"
+            >
               Edit
             </button>
 
             <button
               className="pxp-action danger"
-              onClick={() => onDelete(item.id)}
+              onClick={() => onDelete(baseId)}
               type="button"
             >
               Delete

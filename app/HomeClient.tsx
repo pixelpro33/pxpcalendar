@@ -13,6 +13,7 @@ import RepeatModal from "@/components/calendar/RepeatModal";
 import {
   buildDraft,
   buildGroupedByDay,
+  expandRecurringItemsForMonth,
   filterMonthItems,
   getDaysInMonth,
   getMonthPayTotals,
@@ -134,6 +135,35 @@ function draftToApiPayload(draft: DraftEvent) {
   };
 }
 
+function calendarItemToDraft(item: CalendarItem): DraftEvent {
+  return {
+    type: item.type,
+    title: item.title,
+    details: item.details || "",
+    allDay: item.allDay,
+    date: item.originalDate || item.date,
+    time: item.time || "10:00",
+    repeat: item.repeat,
+    customRepeat: item.customRepeat || {
+      interval: 1,
+      unit: "week",
+      monthlyMode: "same_day",
+    },
+    amount:
+      typeof item.amount === "number"
+        ? String(item.amount)
+        : typeof item.actualAmount === "number"
+          ? String(item.actualAmount)
+          : "",
+    address: item.address || "",
+    customColor: item.customColor || "",
+  };
+}
+
+function getBaseId(item: CalendarItem) {
+  return item.baseId || item.id;
+}
+
 export default function HomeClient({ version }: Props) {
   const today = new Date();
 
@@ -156,6 +186,8 @@ export default function HomeClient({ version }: Props) {
   const [hideEmptyDays, setHideEmptyDays] = useState(false);
 
   const [showAddDrawer, setShowAddDrawer] = useState(false);
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+
   const [showRepeatModal, setShowRepeatModal] = useState(false);
   const [showColorModal, setShowColorModal] = useState(false);
 
@@ -221,9 +253,14 @@ export default function HomeClient({ version }: Props) {
     (_, index) => today.getFullYear() - 2 + index,
   );
 
+  const expandedItems = useMemo(
+    () => expandRecurringItemsForMonth(items, selectedYear, selectedMonth),
+    [items, selectedYear, selectedMonth],
+  );
+
   const monthItems = useMemo(
-    () => filterMonthItems(items, selectedYear, selectedMonth, filters),
-    [items, selectedYear, selectedMonth, filters],
+    () => filterMonthItems(expandedItems, selectedYear, selectedMonth, filters),
+    [expandedItems, selectedYear, selectedMonth, filters],
   );
 
   const groupedByDay = useMemo(
@@ -241,7 +278,18 @@ export default function HomeClient({ version }: Props) {
   }
 
   function openAddDrawer() {
+    setEditingItemId(null);
     setDraft(buildDraft(selectedYear, selectedMonth));
+    setShowAddDrawer(true);
+  }
+
+  function openEditDrawer(item: CalendarItem) {
+    const baseId = getBaseId(item);
+    const baseItem = items.find((entry) => entry.id === baseId) || item;
+
+    setEditingItemId(baseId);
+    setDraft(calendarItemToDraft(baseItem));
+    setSelectedItem(null);
     setShowAddDrawer(true);
   }
 
@@ -256,25 +304,45 @@ export default function HomeClient({ version }: Props) {
     try {
       setEventsError("");
 
+      const isEditMode = Boolean(editingItemId);
+
       const response = await fetch("/api/events", {
-        method: "POST",
+        method: isEditMode ? "PATCH" : "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(draftToApiPayload(draft)),
+        body: JSON.stringify({
+          ...(isEditMode ? { action: "update", id: editingItemId } : {}),
+          ...draftToApiPayload(draft),
+        }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data?.message || "Nu am putut salva evenimentul.");
+        throw new Error(
+          data?.message ||
+            (isEditMode
+              ? "Nu am putut actualiza evenimentul."
+              : "Nu am putut salva evenimentul."),
+        );
       }
 
       if (!data?.event) {
-        throw new Error("API-ul nu a returnat evenimentul salvat.");
+        throw new Error("API-ul nu a returnat evenimentul.");
       }
 
-      setItems((prev) => [...prev, toLocalCalendarItem(data.event)]);
+      const savedItem = toLocalCalendarItem(data.event);
+
+      if (isEditMode) {
+        setItems((prev) =>
+          prev.map((item) => (item.id === editingItemId ? savedItem : item)),
+        );
+      } else {
+        setItems((prev) => [...prev, savedItem]);
+      }
+
+      setEditingItemId(null);
       setShowAddDrawer(false);
     } catch (error) {
       setEventsError(
@@ -492,6 +560,7 @@ export default function HomeClient({ version }: Props) {
         className="pxp-fab"
         onClick={openAddDrawer}
         aria-label="Add event"
+        type="button"
       >
         +
       </button>
@@ -500,10 +569,14 @@ export default function HomeClient({ version }: Props) {
         open={showAddDrawer}
         draft={draft}
         setDraft={setDraft}
-        onClose={() => setShowAddDrawer(false)}
+        onClose={() => {
+          setEditingItemId(null);
+          setShowAddDrawer(false);
+        }}
         onSave={saveDraftItem}
         onOpenRepeat={() => setShowRepeatModal(true)}
         onOpenColor={() => setShowColorModal(true)}
+        mode={editingItemId ? "edit" : "add"}
       />
 
       <RepeatModal
@@ -527,6 +600,7 @@ export default function HomeClient({ version }: Props) {
         onClose={() => setSelectedItem(null)}
         onToggleComplete={toggleComplete}
         onDelete={deleteItem}
+        onEdit={openEditDrawer}
       />
     </main>
   );

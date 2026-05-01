@@ -1,5 +1,6 @@
 export type EventType = "task" | "event" | "pay" | "birthday";
 export type ViewMode = "grid" | "list";
+
 export type RepeatType =
   | "none"
   | "daily"
@@ -20,19 +21,29 @@ export type CustomRepeatConfig = {
 
 export type CalendarItem = {
   id: string;
+
+  // Pentru aparitii generate din repeat.
+  baseId?: string;
+  isOccurrence?: boolean;
+  originalDate?: string;
+
   title: string;
   details?: string;
   type: EventType;
   date: string;
   time?: string;
   allDay: boolean;
+
   completed: boolean;
   status: EventStatus;
+
   repeat: RepeatType;
   customRepeat?: CustomRepeatConfig;
+
   amount?: number;
   actualAmount?: number;
   paymentStatus: PaymentStatus;
+
   customColor?: string;
   address?: string;
   completedAt?: string;

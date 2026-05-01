@@ -56,6 +56,7 @@ export function getDaysRemaining(item: CalendarItem) {
   const target = new Date(
     `${item.date}T${item.allDay ? "00:00" : item.time || "00:00"}`,
   );
+
   const now = new Date();
 
   const startNow = new Date(
@@ -76,6 +77,7 @@ export function getDaysRemaining(item: CalendarItem) {
   if (diffDays === 1) return "maine";
   if (diffDays > 1) return `in ${diffDays} zile`;
   if (diffDays === -1) return "ieri";
+
   return `intarziat cu ${Math.abs(diffDays)} zile`;
 }
 
@@ -228,6 +230,7 @@ export function getMonthPayTotals(items: CalendarItem[]) {
     (sum, item) => sum + getItemPaidAmount(item),
     0,
   );
+
   const remaining = moneyItems.reduce(
     (sum, item) => sum + getItemRemainingAmount(item),
     0,
@@ -238,4 +241,137 @@ export function getMonthPayTotals(items: CalendarItem[]) {
 
 export function isRepeatCustomOpen(repeat: RepeatType) {
   return repeat === "custom";
+}
+
+function dateFromParts(year: number, monthIndex: number, day: number) {
+  return new Date(year, monthIndex, day);
+}
+
+function daysBetween(a: Date, b: Date) {
+  const start = new Date(a.getFullYear(), a.getMonth(), a.getDate()).getTime();
+  const end = new Date(b.getFullYear(), b.getMonth(), b.getDate()).getTime();
+
+  return Math.floor((end - start) / 86400000);
+}
+
+function monthsBetween(a: Date, b: Date) {
+  return (b.getFullYear() - a.getFullYear()) * 12 + b.getMonth() - a.getMonth();
+}
+
+function clampDay(year: number, monthIndex: number, day: number) {
+  return Math.min(day, getDaysInMonth(year, monthIndex));
+}
+
+function makeOccurrence(item: CalendarItem, date: Date): CalendarItem {
+  const occurrenceDate = toDateString(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate(),
+  );
+
+  return {
+    ...item,
+    id: `${item.id}__${occurrenceDate}`,
+    baseId: item.baseId || item.id,
+    isOccurrence: occurrenceDate !== item.date,
+    originalDate: item.originalDate || item.date,
+    date: occurrenceDate,
+  };
+}
+
+function shouldIncludeOccurrence(
+  item: CalendarItem,
+  original: Date,
+  target: Date,
+) {
+  if (target < original) return false;
+
+  if (item.repeat === "daily") {
+    return true;
+  }
+
+  if (item.repeat === "weekly") {
+    return daysBetween(original, target) % 7 === 0;
+  }
+
+  if (item.repeat === "monthly") {
+    return (
+      target.getDate() ===
+      clampDay(target.getFullYear(), target.getMonth(), original.getDate())
+    );
+  }
+
+  if (item.repeat === "yearly") {
+    return (
+      target.getMonth() === original.getMonth() &&
+      target.getDate() ===
+        clampDay(target.getFullYear(), target.getMonth(), original.getDate())
+    );
+  }
+
+  if (item.repeat === "custom" && item.customRepeat) {
+    const interval = Math.max(1, item.customRepeat.interval || 1);
+    const unit = item.customRepeat.unit;
+
+    if (unit === "day") {
+      return daysBetween(original, target) % interval === 0;
+    }
+
+    if (unit === "week") {
+      return daysBetween(original, target) % (interval * 7) === 0;
+    }
+
+    if (unit === "month") {
+      const diff = monthsBetween(original, target);
+
+      return (
+        diff >= 0 &&
+        diff % interval === 0 &&
+        target.getDate() ===
+          clampDay(target.getFullYear(), target.getMonth(), original.getDate())
+      );
+    }
+
+    if (unit === "year") {
+      const diff = target.getFullYear() - original.getFullYear();
+
+      return (
+        diff >= 0 &&
+        diff % interval === 0 &&
+        target.getMonth() === original.getMonth() &&
+        target.getDate() ===
+          clampDay(target.getFullYear(), target.getMonth(), original.getDate())
+      );
+    }
+  }
+
+  return false;
+}
+
+export function expandRecurringItemsForMonth(
+  items: CalendarItem[],
+  selectedYear: number,
+  selectedMonth: number,
+) {
+  const expanded: CalendarItem[] = [];
+  const daysInSelectedMonth = getDaysInMonth(selectedYear, selectedMonth);
+
+  items.forEach((item) => {
+    if (item.repeat === "none") {
+      expanded.push(item);
+      return;
+    }
+
+    const original = new Date(`${item.originalDate || item.date}T00:00:00`);
+
+    for (let day = 1; day <= daysInSelectedMonth; day++) {
+      const target = dateFromParts(selectedYear, selectedMonth, day);
+
+      if (shouldIncludeOccurrence(item, original, target)) {
+        expanded.push(makeOccurrence(item, target));
+      }
+    }
+  });
+
+  return expanded;
 }
