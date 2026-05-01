@@ -390,6 +390,32 @@ export default function HomeClient({ version }: Props) {
     }
   }
 
+  async function renameCategory(id: string, name: string) {
+    const response = await fetch("/api/categories", {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ id, name }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data?.message || "Nu am putut redenumi categoria.");
+    }
+
+    if (data?.category) {
+      setCategories((prev) =>
+        sortCategories(
+          prev.map((category) =>
+            category.id === id ? data.category : category,
+          ),
+        ),
+      );
+    }
+  }
+
   async function toggleCategory(id: string, isActive: boolean) {
     const response = await fetch("/api/categories", {
       method: "PATCH",
