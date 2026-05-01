@@ -217,8 +217,7 @@ export async function DELETE(req: Request) {
 
     const result = await db.query<CategoryRow>(
       `
-        UPDATE payment_categories
-        SET is_active = false
+        DELETE FROM payment_categories
         WHERE id = $1
         RETURNING
           id,
@@ -251,7 +250,7 @@ export async function DELETE(req: Request) {
     return Response.json(
       {
         error: true,
-        message: "Nu am putut dezactiva categoria.",
+        message: "Nu am putut sterge categoria.",
         details: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 },

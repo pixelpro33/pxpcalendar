@@ -416,30 +416,22 @@ export default function HomeClient({ version }: Props) {
     }
   }
 
-  async function toggleCategory(id: string, isActive: boolean) {
+  async function deleteCategory(id: string) {
     const response = await fetch("/api/categories", {
-      method: "PATCH",
+      method: "DELETE",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ id, isActive }),
+      body: JSON.stringify({ id }),
     });
 
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data?.message || "Nu am putut modifica categoria.");
+      throw new Error(data?.message || "Nu am putut sterge categoria.");
     }
 
-    if (data?.category) {
-      setCategories((prev) =>
-        sortCategories(
-          prev.map((category) =>
-            category.id === id ? data.category : category,
-          ),
-        ),
-      );
-    }
+    setCategories((prev) => prev.filter((category) => category.id !== id));
   }
 
   function toggleFilter(type: EventType) {
@@ -833,6 +825,7 @@ export default function HomeClient({ version }: Props) {
             onCreateCategory={createCategory}
             onRenameCategory={renameCategory}
             onToggleCategory={toggleCategory}
+            onDeleteCategory={deleteCategory}
           />
         )}
       </div>

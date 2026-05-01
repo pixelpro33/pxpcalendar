@@ -16,6 +16,7 @@ type Props = {
   onCreateCategory: (name: string) => Promise<void>;
   onRenameCategory: (id: string, name: string) => Promise<void>;
   onToggleCategory: (id: string, isActive: boolean) => Promise<void>;
+  onDeleteCategory: (id: string) => Promise<void>;
 };
 
 export default function SettingsPanel({
@@ -23,6 +24,7 @@ export default function SettingsPanel({
   onCreateCategory,
   onRenameCategory,
   onToggleCategory,
+  onDeleteCategory,
 }: Props) {
   const [newCategory, setNewCategory] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -109,6 +111,32 @@ export default function SettingsPanel({
     }
   }
 
+  async function deleteCategory(id: string, name: string) {
+    const confirmed = window.confirm(
+      `Stergi definitiv categoria "${name}"?\n\nPlatile vechi raman cu textul categoriei salvat, dar categoria nu va mai exista in Settings.`,
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setIsSaving(true);
+      setLocalError("");
+      await onDeleteCategory(id);
+
+      if (editingId === id) {
+        cancelEdit();
+      }
+    } catch (error) {
+      setLocalError(
+        error instanceof Error
+          ? error.message
+          : "Nu am putut sterge categoria.",
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
   return (
     <section className="pxp-settings">
       <div className="pxp-settings-head">
@@ -125,8 +153,8 @@ export default function SettingsPanel({
               <h3>Categorii plati</h3>
               <p>
                 Gestionezi lista folosita in Add/Edit Event pentru plati.
-                Categoriile dezactivate raman in istoricul platilor, dar nu mai
-                apar ca optiuni noi.
+                Categoriile dezactivate raman salvate, iar stergerea definitiva
+                elimina categoria doar din lista de setari.
               </p>
             </div>
           </div>
@@ -214,7 +242,7 @@ export default function SettingsPanel({
 
                         {category.is_active ? (
                           <button
-                            className="pxp-settings-button danger"
+                            className="pxp-settings-button"
                             type="button"
                             onClick={() => toggleCategory(category.id, false)}
                             disabled={isSaving}
@@ -231,6 +259,17 @@ export default function SettingsPanel({
                             Reactiveaza
                           </button>
                         )}
+
+                        <button
+                          className="pxp-settings-button danger"
+                          type="button"
+                          onClick={() =>
+                            deleteCategory(category.id, category.name)
+                          }
+                          disabled={isSaving}
+                        >
+                          Sterge
+                        </button>
                       </div>
                     </>
                   )}
