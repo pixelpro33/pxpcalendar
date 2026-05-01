@@ -1122,7 +1122,7 @@ export async function buildWhatsAppMessage({
       `• Urmatoarele ${finalSettings.reminderDaysAhead} zile: ${formatLei(
         upcomingPaymentsTotal,
       )} lei`,
-      `• Total urgent: ${formatLei(urgentTotal)} lei`,
+      `• Total de pregătit: ${formatLei(urgentTotal)} lei`,
     );
   }
 
