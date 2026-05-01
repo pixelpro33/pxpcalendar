@@ -64,6 +64,12 @@ type OccurrenceRow = {
   completed_at: string | Date | null;
 };
 
+type ExpenseSummaryRow = {
+  spent_today: string | number | null;
+  spent_yesterday: string | number | null;
+  spent_month: string | number | null;
+};
+
 type MessageItem = {
   id: string;
   title: string;
@@ -959,6 +965,34 @@ function formatLei(value: number) {
   }).format(value);
 }
 
+async function getExpenseSummary(baseToday: string) {
+  const monthStart = getMonthStart(baseToday);
+  const monthEnd = getMonthEnd(baseToday);
+  const yesterday = addDays(baseToday, -1);
+
+  const result = await db.query<ExpenseSummaryRow>(
+    `
+      SELECT
+        COALESCE(SUM(amount) FILTER (WHERE expense_date = $1::date), 0) AS spent_today,
+        COALESCE(SUM(amount) FILTER (WHERE expense_date = $2::date), 0) AS spent_yesterday,
+        COALESCE(SUM(amount) FILTER (
+          WHERE expense_date >= $3::date
+            AND expense_date <= $4::date
+        ), 0) AS spent_month
+      FROM expenses
+    `,
+    [baseToday, yesterday, monthStart, monthEnd],
+  );
+
+  const row = result.rows[0];
+
+  return {
+    spentToday: toNumber(row?.spent_today),
+    spentYesterday: toNumber(row?.spent_yesterday),
+    spentMonth: toNumber(row?.spent_month),
+  };
+}
+
 export async function buildWhatsAppMessage({
   settings,
   isTest = false,
@@ -973,6 +1007,8 @@ export async function buildWhatsAppMessage({
     : await getWhatsAppSettings();
 
   const baseToday = todayDate || todayInTimezone(finalSettings.timezone);
+
+  const expenseSummary = await getExpenseSummary(baseToday);
 
   const upcomingStart = addDays(baseToday, 1);
   const upcomingEnd = addDays(baseToday, finalSettings.reminderDaysAhead);
@@ -1098,6 +1134,9 @@ export async function buildWhatsAppMessage({
       "💰 Rezumat luna",
       `✅ Platit: ${formatLei(monthlyPaid)} lei`,
       `⏳ Ramas luna: ${formatLei(monthlyRemaining)} lei`,
+      `💸 Cheltuit azi: ${formatLei(expenseSummary.spentToday)} lei`,
+      `💸 Cheltuit ieri: ${formatLei(expenseSummary.spentYesterday)} lei`,
+      `💸 Cheltuit luna: ${formatLei(expenseSummary.spentMonth)} lei`,
       `📊 Progres: ${paidPercent}% platit`,
       `💳 De platit in urmatoarele ${finalSettings.reminderDaysAhead} zile: ${formatLei(
         upcomingPaymentsTotal,
@@ -1158,6 +1197,9 @@ export async function buildWhatsAppMessage({
       paidPercent,
       upcomingPaymentsTotal,
       overduePaymentsTotal,
+      spentToday: expenseSummary.spentToday,
+      spentYesterday: expenseSummary.spentYesterday,
+      spentMonth: expenseSummary.spentMonth,
       urgentTotal,
     },
     settings: finalSettings,

@@ -13,6 +13,9 @@ import CalendarGrid from "@/components/calendar/CalendarGrid";
 import CalendarHeader from "@/components/calendar/CalendarHeader";
 import CalendarList from "@/components/calendar/CalendarList";
 import CalendarStats from "@/components/calendar/CalendarStats";
+import ExpensesPanel, {
+  ExpenseItem,
+} from "@/components/calendar/ExpensesPanel";
 import EventDetailsModal from "@/components/calendar/EventDetailsModal";
 import MonthlyDashboard, {
   DashboardViewMode,
@@ -245,6 +248,11 @@ export default function HomeClient({ version }: Props) {
 
   const [activeSection, setActiveSection] = useState<AppSection>("calendar");
 
+  const [expenses, setExpenses] = useState<ExpenseItem[]>([]);
+  const [previousExpenses, setPreviousExpenses] = useState<ExpenseItem[]>([]);
+  const [isLoadingExpenses, setIsLoadingExpenses] = useState(false);
+  const [editingExpenseId, setEditingExpenseId] = useState<string | null>(null);
+
   const [selectedYear, setSelectedYear] = useState(today.getFullYear());
   const [selectedMonth, setSelectedMonth] = useState(today.getMonth());
 
@@ -364,6 +372,75 @@ export default function HomeClient({ version }: Props) {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadExpenses() {
+      try {
+        setIsLoadingExpenses(true);
+        setEventsError("");
+
+        const currentResponse = await fetch(
+          `/api/expenses?year=${selectedYear}&month=${selectedMonth + 1}`,
+          {
+            method: "GET",
+            cache: "no-store",
+          },
+        );
+
+        const currentData = await currentResponse.json();
+
+        if (!currentResponse.ok) {
+          throw new Error(
+            currentData?.message || "Nu am putut incarca cheltuielile.",
+          );
+        }
+
+        const previous = getRelativeMonth(selectedYear, selectedMonth, -1);
+
+        const previousResponse = await fetch(
+          `/api/expenses?year=${previous.year}&month=${previous.month + 1}`,
+          {
+            method: "GET",
+            cache: "no-store",
+          },
+        );
+
+        const previousData = await previousResponse.json();
+
+        if (!previousResponse.ok) {
+          throw new Error(
+            previousData?.message ||
+              "Nu am putut incarca cheltuielile lunii trecute.",
+          );
+        }
+
+        if (!cancelled) {
+          setExpenses(Array.isArray(currentData) ? currentData : []);
+          setPreviousExpenses(Array.isArray(previousData) ? previousData : []);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setEventsError(
+            error instanceof Error
+              ? error.message
+              : "Nu am putut incarca cheltuielile.",
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoadingExpenses(false);
+        }
+      }
+    }
+
+    loadExpenses();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedYear, selectedMonth]);
 
   const activeCategoryNames = useMemo(
     () =>
@@ -552,7 +629,22 @@ export default function HomeClient({ version }: Props) {
 
   function openAddExpenseFromMenu() {
     setShowAddMenu(false);
+    setEditingExpenseId(null);
     setExpenseDraft(buildExpenseDraft());
+    setShowExpenseDrawer(true);
+  }
+
+  function openEditExpense(expense: ExpenseItem) {
+    setEditingExpenseId(expense.id);
+    setExpenseDraft({
+      title: expense.title,
+      amount: String(expense.amount),
+      category: expense.category || "",
+      expenseDate: expense.expenseDate,
+      expenseTime: expense.expenseTime || "",
+      paymentMethod: expense.paymentMethod || "Card",
+      notes: expense.notes || "",
+    });
     setShowExpenseDrawer(true);
   }
 
@@ -584,12 +676,17 @@ export default function HomeClient({ version }: Props) {
     try {
       setEventsError("");
 
+      const isEditMode = Boolean(editingExpenseId);
+
       const response = await fetch("/api/expenses", {
-        method: "POST",
+        method: isEditMode ? "PATCH" : "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(expenseDraft),
+        body: JSON.stringify({
+          ...(isEditMode ? { id: editingExpenseId } : {}),
+          ...expenseDraft,
+        }),
       });
 
       const data = await response.json();
@@ -598,6 +695,19 @@ export default function HomeClient({ version }: Props) {
         throw new Error(data?.message || "Nu am putut salva cheltuiala.");
       }
 
+      if (data?.expense) {
+        if (isEditMode) {
+          setExpenses((prev) =>
+            prev.map((expense) =>
+              expense.id === editingExpenseId ? data.expense : expense,
+            ),
+          );
+        } else {
+          setExpenses((prev) => [data.expense, ...prev]);
+        }
+      }
+
+      setEditingExpenseId(null);
       setShowExpenseDrawer(false);
       setExpenseDraft(buildExpenseDraft());
     } catch (error) {
@@ -605,6 +715,39 @@ export default function HomeClient({ version }: Props) {
         error instanceof Error
           ? error.message
           : "Nu am putut salva cheltuiala.",
+      );
+    }
+  }
+
+  async function deleteExpense(id: string) {
+    const confirmed = window.confirm("Stergi aceasta cheltuiala?");
+    if (!confirmed) return;
+
+    const previous = expenses;
+
+    try {
+      setEventsError("");
+      setExpenses((prev) => prev.filter((expense) => expense.id !== id));
+
+      const response = await fetch("/api/expenses", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data?.message || "Nu am putut sterge cheltuiala.");
+      }
+    } catch (error) {
+      setExpenses(previous);
+      setEventsError(
+        error instanceof Error
+          ? error.message
+          : "Nu am putut sterge cheltuiala.",
       );
     }
   }
@@ -971,11 +1114,24 @@ export default function HomeClient({ version }: Props) {
         )}
 
         {activeSection === "dashboard" && (
-          <MonthlyDashboard
-            currentItems={dashboardMonthItems}
-            previousItems={previousDashboardItems}
-            viewMode={dashboardViewMode}
-          />
+          <>
+            <MonthlyDashboard
+              currentItems={dashboardMonthItems}
+              previousItems={previousDashboardItems}
+              viewMode={dashboardViewMode}
+            />
+
+            {isLoadingExpenses && (
+              <div className="pxp-inline-state">Se incarca cheltuielile...</div>
+            )}
+
+            <ExpensesPanel
+              expenses={expenses}
+              previousExpenses={previousExpenses}
+              onEdit={openEditExpense}
+              onDelete={deleteExpense}
+            />
+          </>
         )}
 
         {activeSection === "categories" && (

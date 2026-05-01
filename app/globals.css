@@ -1203,3 +1203,236 @@
 .pxp-fab {
   display: none !important;
 }
+
+/* Expenses dashboard panel */
+.pxp-expenses-panel {
+  width: 100%;
+  margin: 12px 0 80px;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.045);
+  box-shadow: 0 14px 38px rgba(0, 0, 0, 0.16);
+  padding: 13px;
+  overflow: hidden;
+}
+
+.pxp-expenses-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.pxp-expenses-head h3 {
+  margin: 0;
+  color: white;
+  font-size: 18px;
+  font-weight: 950;
+  letter-spacing: -0.035em;
+}
+
+.pxp-expenses-total {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  background: rgba(37, 99, 235, 0.16);
+  color: #bfdbfe;
+  padding: 7px 10px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.pxp-expenses-summary {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.pxp-expenses-summary-card {
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.035);
+  padding: 11px 12px;
+}
+
+.pxp-expenses-summary-card span {
+  display: block;
+  margin-bottom: 5px;
+  color: rgba(255, 255, 255, 0.42);
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.pxp-expenses-summary-card strong {
+  display: block;
+  color: white;
+  font-size: 19px;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.pxp-expenses-summary-card small {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.pxp-expenses-summary-card.is-up small {
+  color: rgba(252, 165, 165, 0.96);
+}
+
+.pxp-expenses-summary-card.is-down small {
+  color: rgba(134, 239, 172, 0.96);
+}
+
+.pxp-expenses-categories {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.pxp-expense-category-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.035);
+  padding: 11px 12px;
+}
+
+.pxp-expense-category-row strong {
+  display: block;
+  color: white;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.pxp-expense-category-row span {
+  display: block;
+  margin-top: 3px;
+  color: rgba(255, 255, 255, 0.46);
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.pxp-expense-category-row b {
+  flex: 0 0 auto;
+  color: white;
+  font-size: 13px;
+  font-weight: 950;
+}
+
+.pxp-expenses-list-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 14px 0 9px;
+}
+
+.pxp-expenses-list-head h4 {
+  margin: 0;
+  color: white;
+  font-size: 15px;
+  font-weight: 950;
+  letter-spacing: -0.03em;
+}
+
+.pxp-expenses-list-head span {
+  color: rgba(255, 255, 255, 0.46);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.pxp-expenses-list {
+  display: grid;
+  gap: 8px;
+}
+
+.pxp-expense-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.035);
+  padding: 11px 12px;
+}
+
+.pxp-expense-main {
+  min-width: 0;
+}
+
+.pxp-expense-main strong {
+  display: block;
+  overflow: hidden;
+  color: white;
+  font-size: 14px;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pxp-expense-main span {
+  display: block;
+  margin-top: 4px;
+  color: rgba(255, 255, 255, 0.46);
+  font-size: 12px;
+  font-weight: 750;
+  line-height: 1.35;
+}
+
+.pxp-expense-side {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.pxp-expense-side b {
+  color: white;
+  font-size: 14px;
+  font-weight: 950;
+}
+
+.pxp-expense-side div {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.pxp-expense-side button {
+  min-height: 32px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.055);
+  color: white;
+  cursor: pointer;
+  padding: 7px 9px;
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.pxp-expense-side button.danger {
+  border-color: rgba(239, 68, 68, 0.34);
+  background: rgba(239, 68, 68, 0.12);
+  color: rgba(254, 202, 202, 0.96);
+}
+
+@media (min-width: 720px) {
+  .pxp-expenses-summary {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .pxp-expense-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+}
