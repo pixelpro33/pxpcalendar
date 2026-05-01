@@ -381,58 +381,54 @@ export default function HomeClient({ version }: Props) {
     const previousItems = items;
     const previousSelected = selectedItem;
 
+    function buildUpdatedItem(item: CalendarItem): CalendarItem {
+      const hasMoney = item.type === "pay" || typeof item.amount === "number";
+
+      return {
+        ...item,
+        completed: nextStatus === "completed",
+        status: nextStatus,
+        actualAmount:
+          nextStatus === "completed" && actualAmount !== null
+            ? actualAmount
+            : nextStatus === "pending"
+              ? undefined
+              : item.actualAmount,
+        paymentStatus:
+          nextStatus === "completed"
+            ? hasMoney
+              ? "paid"
+              : "none"
+            : hasMoney
+              ? "unpaid"
+              : "none",
+        completedAt:
+          nextStatus === "completed"
+            ? item.completedAt || new Date().toISOString()
+            : undefined,
+      };
+    }
+
     try {
       setEventsError("");
 
       setItems((prev) =>
         prev.map((item) =>
-          item.id === itemId
-            ? {
-                ...item,
-                completed: nextStatus === "completed",
-                status: nextStatus,
-                actualAmount:
-                  nextStatus === "completed" && actualAmount !== null
-                    ? actualAmount
-                    : nextStatus === "pending"
-                      ? undefined
-                      : item.actualAmount,
-                paymentStatus:
-                  nextStatus === "completed"
-                    ? item.type === "pay" || typeof item.amount === "number"
-                      ? "paid"
-                      : "none"
-                    : item.type === "pay" || typeof item.amount === "number"
-                      ? "unpaid"
-                      : "none",
-              }
-            : item,
+          item.id === itemId ? buildUpdatedItem(item) : item,
         ),
       );
 
-      setSelectedItem((prev) =>
-        prev && prev.id === itemId
-          ? {
-              ...prev,
-              completed: nextStatus === "completed",
-              status: nextStatus,
-              actualAmount:
-                nextStatus === "completed" && actualAmount !== null
-                  ? actualAmount
-                  : nextStatus === "pending"
-                    ? undefined
-                    : prev.actualAmount,
-              paymentStatus:
-                nextStatus === "completed"
-                  ? prev.type === "pay" || typeof prev.amount === "number"
-                    ? "paid"
-                    : "none"
-                  : prev.type === "pay" || typeof prev.amount === "number"
-                    ? "unpaid"
-                    : "none",
-            }
-          : prev,
-      );
+      setSelectedItem((prev) => {
+        if (!prev) return prev;
+
+        const prevBaseId = getBaseId(prev);
+
+        if (prevBaseId !== itemId) {
+          return prev;
+        }
+
+        return buildUpdatedItem(prev);
+      });
 
       const response = await fetch("/api/events", {
         method: "PATCH",
@@ -459,9 +455,24 @@ export default function HomeClient({ version }: Props) {
           prev.map((item) => (item.id === itemId ? updatedItem : item)),
         );
 
-        setSelectedItem((prev) =>
-          prev && prev.id === itemId ? updatedItem : prev,
-        );
+        setSelectedItem((prev) => {
+          if (!prev) return prev;
+
+          const prevBaseId = getBaseId(prev);
+
+          if (prevBaseId !== itemId) {
+            return prev;
+          }
+
+          return {
+            ...updatedItem,
+            id: prev.id,
+            baseId: prev.baseId,
+            isOccurrence: prev.isOccurrence,
+            originalDate: prev.originalDate,
+            date: prev.date,
+          };
+        });
       }
     } catch (error) {
       setItems(previousItems);
