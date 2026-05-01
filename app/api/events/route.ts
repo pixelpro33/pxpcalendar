@@ -145,36 +145,41 @@ export async function GET() {
       ORDER BY event_at ASC, created_at DESC
     `);
 
-    const ids = eventsResult.rows.map((row) => row.id);
+    const ids = eventsResult.rows.map((row) => String(row.id));
 
     if (ids.length === 0) {
       return Response.json([]);
     }
 
-    const occurrencesResult = await db.query<OccurrenceRow>(
-      `
-        SELECT
-          event_id,
-          occurrence_date,
-          status,
-          payment_status,
-          actual_amount,
-          completed_at
-        FROM event_occurrences
-        WHERE event_id = ANY($1::bigint[])
-        ORDER BY occurrence_date ASC
-      `,
-      [ids],
-    );
+    let occurrencesByEvent = new Map<string, OccurrenceRow[]>();
 
-    const occurrencesByEvent = new Map<string, OccurrenceRow[]>();
+    try {
+      const occurrencesResult = await db.query<OccurrenceRow>(
+        `
+          SELECT
+            event_id,
+            occurrence_date,
+            status,
+            payment_status,
+            actual_amount,
+            completed_at
+          FROM event_occurrences
+          WHERE event_id::text = ANY($1::text[])
+          ORDER BY occurrence_date ASC
+        `,
+        [ids],
+      );
 
-    occurrencesResult.rows.forEach((occurrence) => {
-      const eventId = String(occurrence.event_id);
-      const list = occurrencesByEvent.get(eventId) || [];
-      list.push(occurrence);
-      occurrencesByEvent.set(eventId, list);
-    });
+      occurrencesResult.rows.forEach((occurrence) => {
+        const eventId = String(occurrence.event_id);
+        const list = occurrencesByEvent.get(eventId) || [];
+        list.push(occurrence);
+        occurrencesByEvent.set(eventId, list);
+      });
+    } catch (occurrenceError) {
+      console.error("GET OCCURRENCES ERROR:", occurrenceError);
+      occurrencesByEvent = new Map<string, OccurrenceRow[]>();
+    }
 
     const rowsWithOccurrences = eventsResult.rows.map((row) => ({
       ...row,
