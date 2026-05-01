@@ -34,21 +34,23 @@ export default function AddEventDrawer({
       : categories;
 
   return (
-    <div className="pxp-overlay" onClick={onClose}>
-      <section className="pxp-sheet" onClick={(e) => e.stopPropagation()}>
-        <div className="pxp-sheet-grabber" />
-
-        <div className="pxp-sheet-bar">
+    <div className="pxp-side-overlay" onClick={onClose}>
+      <aside className="pxp-side-drawer" onClick={(e) => e.stopPropagation()}>
+        <div className="pxp-side-bar">
           <button className="pxp-link-button" onClick={onClose} type="button">
             Cancel
           </button>
+
+          <div className="pxp-side-bar-title">
+            {mode === "edit" ? "Edit event" : "Add event"}
+          </div>
 
           <button className="pxp-link-button" onClick={onSave} type="button">
             {saveLabel}
           </button>
         </div>
 
-        <div className="pxp-sheet-content">
+        <div className="pxp-side-content">
           <input
             className="pxp-sheet-title-input"
             value={draft.title}
@@ -223,7 +225,7 @@ export default function AddEventDrawer({
             )}
           </div>
         </div>
-      </section>
+      </aside>
     </div>
   );
 }
