@@ -54,6 +54,17 @@ type DbEvent = {
     monthlyMode?: "same_day";
   } | null;
   completed_at: string | null;
+  occurrences?: Record<
+    string,
+    {
+      occurrence_date: string;
+      status: "pending" | "completed";
+      completed: boolean;
+      payment_status: "none" | "unpaid" | "paid";
+      actual_amount: number | null;
+      completed_at: string | null;
+    }
+  >;
 };
 
 function pad(value: number) {
@@ -111,8 +122,94 @@ function toLocalCalendarItem(row: DbEvent): CalendarItem {
   };
 }
 
-function draftToEventAt(draft: DraftEvent) {
-  return `${draft.date}T${draft.allDay ? "00:00" : draft.time}:00`;
+function toLocalCalendarItem(row: DbEvent): CalendarItem {
+  const date = new Date(row.event_at);
+
+  const year = date.getFullYear();
+  const month = pad(date.getMonth() + 1);
+  const day = pad(date.getDate());
+  const hour = pad(date.getHours());
+  const minute = pad(date.getMinutes());
+
+  const repeat = row.repeat_type || "none";
+  const completed = row.status === "completed";
+
+  const occurrences: CalendarItem["occurrences"] = {};
+
+  if (
+    row &&
+    typeof row === "object" &&
+    "occurrences" in row &&
+    row.occurrences &&
+    typeof row.occurrences === "object"
+  ) {
+    Object.entries(
+      row.occurrences as Record<
+        string,
+        {
+          occurrence_date: string;
+          status: "pending" | "completed";
+          completed: boolean;
+          payment_status: "none" | "unpaid" | "paid";
+          actual_amount: number | null;
+          completed_at: string | null;
+        }
+      >,
+    ).forEach(([key, occurrence]) => {
+      occurrences[key] = {
+        occurrenceDate: occurrence.occurrence_date || key,
+        status: occurrence.status || "pending",
+        completed: occurrence.status === "completed",
+        paymentStatus: occurrence.payment_status || "none",
+        actualAmount:
+          typeof occurrence.actual_amount === "number"
+            ? occurrence.actual_amount
+            : occurrence.actual_amount === null
+              ? undefined
+              : Number(occurrence.actual_amount),
+        completedAt: occurrence.completed_at || undefined,
+      };
+    });
+  }
+
+  return {
+    id: row.id,
+    title: row.title,
+    details: row.details || undefined,
+    type: row.type || "event",
+    date: `${year}-${month}-${day}`,
+    time: row.all_day ? undefined : `${hour}:${minute}`,
+    allDay: Boolean(row.all_day),
+    completed,
+    status: completed ? "completed" : "pending",
+    repeat,
+    customRepeat:
+      repeat === "custom"
+        ? {
+            interval:
+              row.custom_repeat_config?.interval || row.repeat_interval || 1,
+            unit: row.custom_repeat_config?.unit || row.repeat_unit || "week",
+            monthlyMode: row.custom_repeat_config?.monthlyMode || "same_day",
+          }
+        : undefined,
+    amount:
+      typeof row.amount === "number"
+        ? row.amount
+        : row.amount === null
+          ? undefined
+          : Number(row.amount),
+    actualAmount:
+      typeof row.actual_amount === "number"
+        ? row.actual_amount
+        : row.actual_amount === null
+          ? undefined
+          : Number(row.actual_amount),
+    paymentStatus: row.payment_status || "none",
+    address: row.address || undefined,
+    customColor: row.custom_color || undefined,
+    completedAt: row.completed_at || undefined,
+    occurrences,
+  };
 }
 
 function draftToApiPayload(draft: DraftEvent) {
@@ -354,7 +451,12 @@ export default function HomeClient({ version }: Props) {
   }
 
   async function toggleComplete(itemId: string) {
-    const currentItem = items.find((item) => item.id === itemId);
+    const selectedBaseId = selectedItem ? getBaseId(selectedItem) : itemId;
+    const occurrenceDate = selectedItem?.occurrenceDate || selectedItem?.date;
+
+    const currentItem =
+      selectedItem || items.find((item) => item.id === selectedBaseId);
+
     if (!currentItem) return;
 
     const nextStatus =
@@ -381,7 +483,7 @@ export default function HomeClient({ version }: Props) {
     const previousItems = items;
     const previousSelected = selectedItem;
 
-    function buildUpdatedItem(item: CalendarItem): CalendarItem {
+    function buildOccurrenceState(item: CalendarItem): CalendarItem {
       const hasMoney = item.type === "pay" || typeof item.amount === "number";
 
       return {
@@ -396,7 +498,7 @@ export default function HomeClient({ version }: Props) {
               : item.actualAmount,
         paymentStatus:
           nextStatus === "completed"
-            ? hasMoney
+            ? hasMoney || actualAmount !== null
               ? "paid"
               : "none"
             : hasMoney
@@ -412,23 +514,49 @@ export default function HomeClient({ version }: Props) {
     try {
       setEventsError("");
 
-      setItems((prev) =>
-        prev.map((item) =>
-          item.id === itemId ? buildUpdatedItem(item) : item,
-        ),
-      );
-
       setSelectedItem((prev) => {
         if (!prev) return prev;
 
         const prevBaseId = getBaseId(prev);
 
-        if (prevBaseId !== itemId) {
+        if (prevBaseId !== selectedBaseId) {
           return prev;
         }
 
-        return buildUpdatedItem(prev);
+        return buildOccurrenceState(prev);
       });
+
+      setItems((prev) =>
+        prev.map((item) => {
+          if (item.id !== selectedBaseId) return item;
+
+          if (item.repeat === "none") {
+            return buildOccurrenceState(item);
+          }
+
+          if (!occurrenceDate) return item;
+
+          const updatedSelected = buildOccurrenceState({
+            ...item,
+            date: occurrenceDate,
+          });
+
+          return {
+            ...item,
+            occurrences: {
+              ...(item.occurrences || {}),
+              [occurrenceDate]: {
+                occurrenceDate,
+                status: updatedSelected.status,
+                completed: updatedSelected.completed,
+                paymentStatus: updatedSelected.paymentStatus,
+                actualAmount: updatedSelected.actualAmount,
+                completedAt: updatedSelected.completedAt,
+              },
+            },
+          };
+        }),
+      );
 
       const response = await fetch("/api/events", {
         method: "PATCH",
@@ -436,7 +564,8 @@ export default function HomeClient({ version }: Props) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          id: itemId,
+          id: selectedBaseId,
+          occurrenceDate,
           status: nextStatus,
           actualAmount,
         }),
@@ -452,7 +581,7 @@ export default function HomeClient({ version }: Props) {
         const updatedItem = toLocalCalendarItem(data.event);
 
         setItems((prev) =>
-          prev.map((item) => (item.id === itemId ? updatedItem : item)),
+          prev.map((item) => (item.id === selectedBaseId ? updatedItem : item)),
         );
 
         setSelectedItem((prev) => {
@@ -460,7 +589,7 @@ export default function HomeClient({ version }: Props) {
 
           const prevBaseId = getBaseId(prev);
 
-          if (prevBaseId !== itemId) {
+          if (prevBaseId !== selectedBaseId) {
             return prev;
           }
 
@@ -470,7 +599,60 @@ export default function HomeClient({ version }: Props) {
             baseId: prev.baseId,
             isOccurrence: prev.isOccurrence,
             originalDate: prev.originalDate,
+            occurrenceDate: prev.occurrenceDate,
             date: prev.date,
+          };
+        });
+      }
+
+      if (data?.occurrence && occurrenceDate) {
+        setItems((prev) =>
+          prev.map((item) => {
+            if (item.id !== selectedBaseId) return item;
+
+            return {
+              ...item,
+              occurrences: {
+                ...(item.occurrences || {}),
+                [occurrenceDate]: {
+                  occurrenceDate,
+                  status: data.occurrence.status,
+                  completed: data.occurrence.status === "completed",
+                  paymentStatus: data.occurrence.payment_status,
+                  actualAmount:
+                    typeof data.occurrence.actual_amount === "number"
+                      ? data.occurrence.actual_amount
+                      : data.occurrence.actual_amount === null
+                        ? undefined
+                        : Number(data.occurrence.actual_amount),
+                  completedAt: data.occurrence.completed_at || undefined,
+                },
+              },
+            };
+          }),
+        );
+
+        setSelectedItem((prev) => {
+          if (!prev) return prev;
+
+          const prevBaseId = getBaseId(prev);
+
+          if (prevBaseId !== selectedBaseId) {
+            return prev;
+          }
+
+          return {
+            ...prev,
+            completed: data.occurrence.status === "completed",
+            status: data.occurrence.status,
+            paymentStatus: data.occurrence.payment_status,
+            actualAmount:
+              typeof data.occurrence.actual_amount === "number"
+                ? data.occurrence.actual_amount
+                : data.occurrence.actual_amount === null
+                  ? undefined
+                  : Number(data.occurrence.actual_amount),
+            completedAt: data.occurrence.completed_at || undefined,
           };
         });
       }

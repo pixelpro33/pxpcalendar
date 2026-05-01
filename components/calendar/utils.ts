@@ -170,6 +170,7 @@ export function createItemFromDraft(draft: DraftEvent): CalendarItem {
     paymentStatus: draft.type === "pay" ? "unpaid" : amount ? "unpaid" : "none",
     address: draft.address.trim() || undefined,
     customColor: draft.customColor.trim() || undefined,
+    occurrences: {},
   };
 }
 
@@ -262,6 +263,44 @@ function clampDay(year: number, monthIndex: number, day: number) {
   return Math.min(day, getDaysInMonth(year, monthIndex));
 }
 
+function getDefaultPaymentStatus(item: CalendarItem) {
+  if (item.type === "pay") return "unpaid";
+  if (item.type === "event" && typeof item.amount === "number") return "unpaid";
+  return "none";
+}
+
+function applyOccurrenceState(item: CalendarItem, occurrenceDate: string) {
+  const override = item.occurrences?.[occurrenceDate];
+
+  if (override) {
+    return {
+      completed: override.completed,
+      status: override.status,
+      paymentStatus: override.paymentStatus,
+      actualAmount: override.actualAmount,
+      completedAt: override.completedAt,
+    };
+  }
+
+  if (item.repeat !== "none") {
+    return {
+      completed: false,
+      status: "pending" as const,
+      paymentStatus: getDefaultPaymentStatus(item),
+      actualAmount: undefined,
+      completedAt: undefined,
+    };
+  }
+
+  return {
+    completed: item.completed,
+    status: item.status,
+    paymentStatus: item.paymentStatus,
+    actualAmount: item.actualAmount,
+    completedAt: item.completedAt,
+  };
+}
+
 function makeOccurrence(item: CalendarItem, date: Date): CalendarItem {
   const occurrenceDate = toDateString(
     date.getFullYear(),
@@ -269,12 +308,16 @@ function makeOccurrence(item: CalendarItem, date: Date): CalendarItem {
     date.getDate(),
   );
 
+  const state = applyOccurrenceState(item, occurrenceDate);
+
   return {
     ...item,
+    ...state,
     id: `${item.id}__${occurrenceDate}`,
     baseId: item.baseId || item.id,
-    isOccurrence: occurrenceDate !== item.date,
+    isOccurrence: occurrenceDate !== item.date || item.repeat !== "none",
     originalDate: item.originalDate || item.date,
+    occurrenceDate,
     date: occurrenceDate,
   };
 }

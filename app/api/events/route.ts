@@ -1,5 +1,14 @@
 import { db } from "@/lib/db";
 
+type OccurrenceRow = {
+  event_id: string | number;
+  occurrence_date: string | Date;
+  status: string;
+  payment_status: string;
+  actual_amount: string | number | null;
+  completed_at: string | Date | null;
+};
+
 type EventRow = {
   id: string | number;
   title: string;
@@ -20,6 +29,7 @@ type EventRow = {
   completed_at: string | Date | null;
   created_at: string | Date;
   updated_at: string | Date | null;
+  occurrences?: OccurrenceRow[];
 };
 
 function toNumber(value: unknown) {
@@ -29,7 +39,40 @@ function toNumber(value: unknown) {
   return Number.isFinite(numberValue) ? numberValue : null;
 }
 
+function toDateOnly(value: string | Date) {
+  const date = value instanceof Date ? value : new Date(value);
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+function normalizeOccurrence(row: OccurrenceRow) {
+  const status = row.status || "pending";
+
+  return {
+    occurrence_date: toDateOnly(row.occurrence_date),
+    status,
+    completed: status === "completed",
+    payment_status: row.payment_status || "none",
+    actual_amount: toNumber(row.actual_amount),
+    completed_at: row.completed_at,
+  };
+}
+
 function normalizeEvent(row: EventRow) {
+  const occurrences: Record<
+    string,
+    ReturnType<typeof normalizeOccurrence>
+  > = {};
+
+  (row.occurrences || []).forEach((occurrence) => {
+    const normalized = normalizeOccurrence(occurrence);
+    occurrences[normalized.occurrence_date] = normalized;
+  });
+
   return {
     id: String(row.id),
     title: row.title,
@@ -50,15 +93,21 @@ function normalizeEvent(row: EventRow) {
     completed_at: row.completed_at,
     created_at: row.created_at,
     updated_at: row.updated_at,
+    occurrences,
   };
 }
 
-function getPaymentStatus(type: string, amount: number | null, status: string) {
+function getPaymentStatus(
+  type: string,
+  amount: number | null,
+  status: string,
+  actualAmount: number | null = null,
+) {
   if (type === "pay") {
     return status === "completed" ? "paid" : "unpaid";
   }
 
-  if (type === "event" && amount !== null) {
+  if (type === "event" && (amount !== null || actualAmount !== null)) {
     return status === "completed" ? "paid" : "unpaid";
   }
 
@@ -91,12 +140,48 @@ const EVENT_SELECT = `
 
 export async function GET() {
   try {
-    const result = await db.query<EventRow>(`
+    const eventsResult = await db.query<EventRow>(`
       ${EVENT_SELECT}
       ORDER BY event_at ASC, created_at DESC
     `);
 
-    return Response.json(result.rows.map(normalizeEvent));
+    const ids = eventsResult.rows.map((row) => row.id);
+
+    if (ids.length === 0) {
+      return Response.json([]);
+    }
+
+    const occurrencesResult = await db.query<OccurrenceRow>(
+      `
+        SELECT
+          event_id,
+          occurrence_date,
+          status,
+          payment_status,
+          actual_amount,
+          completed_at
+        FROM event_occurrences
+        WHERE event_id = ANY($1::bigint[])
+        ORDER BY occurrence_date ASC
+      `,
+      [ids],
+    );
+
+    const occurrencesByEvent = new Map<string, OccurrenceRow[]>();
+
+    occurrencesResult.rows.forEach((occurrence) => {
+      const eventId = String(occurrence.event_id);
+      const list = occurrencesByEvent.get(eventId) || [];
+      list.push(occurrence);
+      occurrencesByEvent.set(eventId, list);
+    });
+
+    const rowsWithOccurrences = eventsResult.rows.map((row) => ({
+      ...row,
+      occurrences: occurrencesByEvent.get(String(row.id)) || [],
+    }));
+
+    return Response.json(rowsWithOccurrences.map(normalizeEvent));
   } catch (error) {
     console.error("GET EVENTS ERROR:", error);
 
@@ -210,7 +295,7 @@ export async function POST(req: Request) {
 
     return Response.json({
       success: true,
-      event: normalizeEvent(result.rows[0]),
+      event: normalizeEvent({ ...result.rows[0], occurrences: [] }),
     });
   } catch (error) {
     console.error("POST EVENTS ERROR:", error);
@@ -354,10 +439,11 @@ export async function PATCH(req: Request) {
 
       return Response.json({
         success: true,
-        event: normalizeEvent(result.rows[0]),
+        event: normalizeEvent({ ...result.rows[0], occurrences: [] }),
       });
     }
 
+    const occurrenceDate = String(body.occurrenceDate || "").trim();
     const status = String(body.status || "").trim();
     const actualAmount = toNumber(body.actualAmount);
 
@@ -393,7 +479,67 @@ export async function PATCH(req: Request) {
     const current = existing.rows[0];
     const type = current.type || "event";
     const amount = toNumber(current.amount);
-    const nextPaymentStatus = getPaymentStatus(type, amount, status);
+    const nextPaymentStatus = getPaymentStatus(
+      type,
+      amount,
+      status,
+      actualAmount,
+    );
+
+    if (occurrenceDate) {
+      const occurrenceResult = await db.query<OccurrenceRow>(
+        `
+          INSERT INTO event_occurrences (
+            event_id,
+            occurrence_date,
+            status,
+            payment_status,
+            actual_amount,
+            completed_at
+          )
+          VALUES (
+            $1,
+            $2,
+            $3,
+            $4,
+            CASE
+              WHEN $3 = 'completed' AND $5::numeric IS NOT NULL THEN $5::numeric
+              ELSE NULL
+            END,
+            CASE
+              WHEN $3 = 'completed' THEN NOW()
+              ELSE NULL
+            END
+          )
+          ON CONFLICT (event_id, occurrence_date)
+          DO UPDATE SET
+            status = EXCLUDED.status,
+            payment_status = EXCLUDED.payment_status,
+            actual_amount = CASE
+              WHEN EXCLUDED.status = 'completed' AND $5::numeric IS NOT NULL THEN $5::numeric
+              WHEN EXCLUDED.status = 'pending' THEN NULL
+              ELSE event_occurrences.actual_amount
+            END,
+            completed_at = CASE
+              WHEN EXCLUDED.status = 'completed' THEN COALESCE(event_occurrences.completed_at, NOW())
+              ELSE NULL
+            END
+          RETURNING
+            event_id,
+            occurrence_date,
+            status,
+            payment_status,
+            actual_amount,
+            completed_at
+        `,
+        [id, occurrenceDate, status, nextPaymentStatus, actualAmount],
+      );
+
+      return Response.json({
+        success: true,
+        occurrence: normalizeOccurrence(occurrenceResult.rows[0]),
+      });
+    }
 
     const result = await db.query<EventRow>(
       `
@@ -437,7 +583,7 @@ export async function PATCH(req: Request) {
 
     return Response.json({
       success: true,
-      event: normalizeEvent(result.rows[0]),
+      event: normalizeEvent({ ...result.rows[0], occurrences: [] }),
     });
   } catch (error) {
     console.error("PATCH EVENT ERROR:", error);

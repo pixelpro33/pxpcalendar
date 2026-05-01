@@ -19,13 +19,23 @@ export type CustomRepeatConfig = {
   monthlyMode?: "same_day";
 };
 
+export type CalendarOccurrence = {
+  occurrenceDate: string;
+  status: EventStatus;
+  completed: boolean;
+  paymentStatus: PaymentStatus;
+  actualAmount?: number;
+  completedAt?: string;
+};
+
 export type CalendarItem = {
   id: string;
 
-  // Pentru aparitii generate din repeat.
   baseId?: string;
   isOccurrence?: boolean;
   originalDate?: string;
+  occurrenceDate?: string;
+  occurrences?: Record<string, CalendarOccurrence>;
 
   title: string;
   details?: string;
