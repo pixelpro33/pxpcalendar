@@ -263,13 +263,21 @@ function clampDay(year: number, monthIndex: number, day: number) {
   return Math.min(day, getDaysInMonth(year, monthIndex));
 }
 
-function getDefaultPaymentStatus(item: CalendarItem) {
+function getDefaultPaymentStatus(
+  item: CalendarItem,
+): CalendarItem["paymentStatus"] {
   if (item.type === "pay") return "unpaid";
   if (item.type === "event" && typeof item.amount === "number") return "unpaid";
   return "none";
 }
 
-function applyOccurrenceState(item: CalendarItem, occurrenceDate: string) {
+function applyOccurrenceState(
+  item: CalendarItem,
+  occurrenceDate: string,
+): Pick<
+  CalendarItem,
+  "completed" | "status" | "paymentStatus" | "actualAmount" | "completedAt"
+> {
   const override = item.occurrences?.[occurrenceDate];
 
   if (override) {
@@ -285,7 +293,7 @@ function applyOccurrenceState(item: CalendarItem, occurrenceDate: string) {
   if (item.repeat !== "none") {
     return {
       completed: false,
-      status: "pending" as const,
+      status: "pending",
       paymentStatus: getDefaultPaymentStatus(item),
       actualAmount: undefined,
       completedAt: undefined,
