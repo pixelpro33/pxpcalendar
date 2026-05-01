@@ -215,6 +215,22 @@ function occurrenceFromApi(
   };
 }
 
+const DASHBOARD_FILTERS: FiltersState = {
+  task: true,
+  event: true,
+  pay: true,
+  birthday: true,
+};
+
+function getRelativeMonth(year: number, monthIndex: number, delta: number) {
+  const date = new Date(year, monthIndex + delta, 1);
+
+  return {
+    year: date.getFullYear(),
+    month: date.getMonth(),
+  };
+}
+
 export default function HomeClient({ version }: Props) {
   const today = new Date();
 
@@ -355,6 +371,43 @@ export default function HomeClient({ version }: Props) {
   const expandedItems = useMemo(
     () => expandRecurringItemsForMonth(items, selectedYear, selectedMonth),
     [items, selectedYear, selectedMonth],
+  );
+
+  const dashboardMonthItems = useMemo(
+    () =>
+      filterMonthItems(
+        expandedItems,
+        selectedYear,
+        selectedMonth,
+        DASHBOARD_FILTERS,
+      ),
+    [expandedItems, selectedYear, selectedMonth],
+  );
+
+  const previousMonth = useMemo(
+    () => getRelativeMonth(selectedYear, selectedMonth, -1),
+    [selectedYear, selectedMonth],
+  );
+
+  const previousExpandedItems = useMemo(
+    () =>
+      expandRecurringItemsForMonth(
+        items,
+        previousMonth.year,
+        previousMonth.month,
+      ),
+    [items, previousMonth.year, previousMonth.month],
+  );
+
+  const previousDashboardItems = useMemo(
+    () =>
+      filterMonthItems(
+        previousExpandedItems,
+        previousMonth.year,
+        previousMonth.month,
+        DASHBOARD_FILTERS,
+      ),
+    [previousExpandedItems, previousMonth.year, previousMonth.month],
   );
 
   const monthItems = useMemo(
@@ -845,7 +898,10 @@ export default function HomeClient({ version }: Props) {
         )}
 
         {activeSection === "dashboard" && (
-          <MonthlyDashboard items={monthItems} />
+          <MonthlyDashboard
+            currentItems={dashboardMonthItems}
+            previousItems={previousDashboardItems}
+          />
         )}
 
         {activeSection === "settings" && (
