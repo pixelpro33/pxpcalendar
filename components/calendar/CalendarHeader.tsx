@@ -1,3 +1,4 @@
+import AppNavigation, { AppSection } from "./AppNavigation";
 import { MONTHS } from "./mockData";
 import { ViewMode } from "./types";
 
@@ -10,6 +11,8 @@ export default function CalendarHeader({
   viewMode,
   setViewMode,
   years,
+  activeSection,
+  setActiveSection,
 }: {
   version: string;
   selectedYear: number;
@@ -19,14 +22,28 @@ export default function CalendarHeader({
   viewMode: ViewMode;
   setViewMode: (value: ViewMode) => void;
   years: number[];
+  activeSection: AppSection;
+  setActiveSection: (section: AppSection) => void;
 }) {
   return (
     <header className="pxp-header">
-      <div className="pxp-header-top">
+      <div className="pxp-header-title-row">
         <div>
           <div className="pxp-title">pxpcalendar</div>
           <div className="pxp-subtitle">iOS dark UI preview · v{version}</div>
         </div>
+
+        <div className="pxp-header-menu-slot">
+          <AppNavigation
+            activeSection={activeSection}
+            setActiveSection={setActiveSection}
+            variant="mobile"
+          />
+        </div>
+      </div>
+
+      <div className="pxp-header-top">
+        <div className="pxp-header-spacer" />
 
         <div className="pxp-header-actions">
           <select
@@ -44,7 +61,9 @@ export default function CalendarHeader({
 
           <div className="pxp-segment" aria-label="View mode">
             <button
-              className={`pxp-segment-button ${viewMode === "grid" ? "is-active" : ""}`}
+              className={`pxp-segment-button ${
+                viewMode === "grid" ? "is-active" : ""
+              }`}
               onClick={() => setViewMode("grid")}
               type="button"
             >
@@ -52,7 +71,9 @@ export default function CalendarHeader({
             </button>
 
             <button
-              className={`pxp-segment-button ${viewMode === "list" ? "is-active" : ""}`}
+              className={`pxp-segment-button ${
+                viewMode === "list" ? "is-active" : ""
+              }`}
               onClick={() => setViewMode("list")}
               type="button"
             >

@@ -645,11 +645,14 @@ export default function HomeClient({ version }: Props) {
           viewMode={viewMode}
           setViewMode={setViewMode}
           years={years}
+          activeSection={activeSection}
+          setActiveSection={setActiveSection}
         />
 
         <AppNavigation
           activeSection={activeSection}
           setActiveSection={setActiveSection}
+          variant="desktop"
         />
 
         {isLoadingEvents && (

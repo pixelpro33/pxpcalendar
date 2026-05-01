@@ -7,6 +7,7 @@ export type AppSection = "calendar" | "dashboard" | "settings";
 type Props = {
   activeSection: AppSection;
   setActiveSection: (section: AppSection) => void;
+  variant?: "desktop" | "mobile";
 };
 
 const ITEMS: Array<{
@@ -14,26 +15,15 @@ const ITEMS: Array<{
   label: string;
   icon: string;
 }> = [
-  {
-    id: "calendar",
-    label: "Calendar",
-    icon: "📅",
-  },
-  {
-    id: "dashboard",
-    label: "Dashboard",
-    icon: "📊",
-  },
-  {
-    id: "settings",
-    label: "Settings",
-    icon: "⚙️",
-  },
+  { id: "calendar", label: "Calendar", icon: "📅" },
+  { id: "dashboard", label: "Dashboard", icon: "📊" },
+  { id: "settings", label: "Settings", icon: "⚙️" },
 ];
 
 export default function AppNavigation({
   activeSection,
   setActiveSection,
+  variant = "desktop",
 }: Props) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -53,9 +43,9 @@ export default function AppNavigation({
     setMobileOpen(false);
   }
 
-  return (
-    <>
-      <div className="pxp-mobile-nav-top">
+  if (variant === "mobile") {
+    return (
+      <>
         <button
           type="button"
           className="pxp-mobile-menu-button"
@@ -67,82 +57,84 @@ export default function AppNavigation({
           <span />
           <span />
         </button>
-      </div>
 
-      <nav className="pxp-app-nav" aria-label="App navigation">
-        {ITEMS.map((item) => {
-          const active = activeSection === item.id;
-
-          return (
-            <button
-              key={item.id}
-              type="button"
-              className={`pxp-app-nav-button ${active ? "is-active" : ""}`}
-              onClick={() => handleSelect(item.id)}
-            >
-              <span className="pxp-app-nav-icon">{item.icon}</span>
-              <span>{item.label}</span>
-            </button>
-          );
-        })}
-      </nav>
-
-      {mobileOpen && (
-        <div
-          className="pxp-mobile-menu-overlay"
-          onClick={() => setMobileOpen(false)}
-        >
+        {mobileOpen && (
           <div
-            className="pxp-mobile-menu-sheet"
-            onClick={(e) => e.stopPropagation()}
+            className="pxp-mobile-menu-overlay"
+            onClick={() => setMobileOpen(false)}
           >
-            <div className="pxp-mobile-menu-head">
-              <div>
-                <div className="pxp-mobile-menu-kicker">Navigation</div>
-                <div className="pxp-mobile-menu-title">Meniu</div>
+            <div
+              className="pxp-mobile-menu-sheet"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="pxp-mobile-menu-head">
+                <div>
+                  <div className="pxp-mobile-menu-kicker">Navigation</div>
+                  <div className="pxp-mobile-menu-title">Meniu</div>
+                </div>
+
+                <button
+                  type="button"
+                  className="pxp-mobile-menu-close"
+                  aria-label="Close navigation menu"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  ✕
+                </button>
               </div>
 
-              <button
-                type="button"
-                className="pxp-mobile-menu-close"
-                aria-label="Close navigation menu"
-                onClick={() => setMobileOpen(false)}
-              >
-                ✕
-              </button>
-            </div>
+              <div className="pxp-mobile-menu-list">
+                {ITEMS.map((item) => {
+                  const active = activeSection === item.id;
 
-            <div className="pxp-mobile-menu-list">
-              {ITEMS.map((item) => {
-                const active = activeSection === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      className={`pxp-mobile-menu-item ${
+                        active ? "is-active" : ""
+                      }`}
+                      onClick={() => handleSelect(item.id)}
+                    >
+                      <span className="pxp-mobile-menu-item-icon">
+                        {item.icon}
+                      </span>
 
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    className={`pxp-mobile-menu-item ${
-                      active ? "is-active" : ""
-                    }`}
-                    onClick={() => handleSelect(item.id)}
-                  >
-                    <span className="pxp-mobile-menu-item-icon">
-                      {item.icon}
-                    </span>
+                      <span className="pxp-mobile-menu-item-text">
+                        {item.label}
+                      </span>
 
-                    <span className="pxp-mobile-menu-item-text">
-                      {item.label}
-                    </span>
-
-                    {active && (
-                      <span className="pxp-mobile-menu-item-badge">Open</span>
-                    )}
-                  </button>
-                );
-              })}
+                      {active && (
+                        <span className="pxp-mobile-menu-item-badge">Open</span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </>
+        )}
+      </>
+    );
+  }
+
+  return (
+    <nav className="pxp-app-nav" aria-label="App navigation">
+      {ITEMS.map((item) => {
+        const active = activeSection === item.id;
+
+        return (
+          <button
+            key={item.id}
+            type="button"
+            className={`pxp-app-nav-button ${active ? "is-active" : ""}`}
+            onClick={() => handleSelect(item.id)}
+          >
+            <span className="pxp-app-nav-icon">{item.icon}</span>
+            <span>{item.label}</span>
+          </button>
+        );
+      })}
+    </nav>
   );
 }

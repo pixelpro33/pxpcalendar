@@ -1669,3 +1669,49 @@ body {
     display: none;
   }
 }
+
+.pxp-header-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.pxp-header-menu-slot {
+  flex: 0 0 auto;
+  display: none;
+}
+
+.pxp-header-spacer {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .pxp-header-menu-slot {
+    display: block;
+  }
+
+  .pxp-app-nav {
+    display: none;
+  }
+
+  .pxp-mobile-nav-top {
+    display: none;
+  }
+
+  .pxp-mobile-menu-button {
+    display: inline-flex;
+  }
+}
+
+@media (min-width: 768px) {
+  .pxp-header-menu-slot {
+    display: none;
+  }
+
+  .pxp-mobile-menu-button,
+  .pxp-mobile-menu-overlay {
+    display: none;
+  }
+}
