@@ -67,6 +67,7 @@ type OccurrenceRow = {
 type ExpenseSummaryRow = {
   spent_today: string | number | null;
   spent_yesterday: string | number | null;
+  spent_day_before_yesterday: string | number | null;
   spent_month: string | number | null;
 };
 
@@ -975,19 +976,21 @@ async function getExpenseSummary(baseToday: string) {
   const monthStart = getMonthStart(baseToday);
   const monthEnd = getMonthEnd(baseToday);
   const yesterday = addDays(baseToday, -1);
+  const dayBeforeYesterday = addDays(baseToday, -2);
 
   const result = await db.query<ExpenseSummaryRow>(
     `
       SELECT
         COALESCE(SUM(amount) FILTER (WHERE expense_date = $1::date), 0) AS spent_today,
         COALESCE(SUM(amount) FILTER (WHERE expense_date = $2::date), 0) AS spent_yesterday,
+        COALESCE(SUM(amount) FILTER (WHERE expense_date = $3::date), 0) AS spent_day_before_yesterday,
         COALESCE(SUM(amount) FILTER (
-          WHERE expense_date >= $3::date
-            AND expense_date <= $4::date
+          WHERE expense_date >= $4::date
+            AND expense_date <= $5::date
         ), 0) AS spent_month
       FROM expenses
     `,
-    [baseToday, yesterday, monthStart, monthEnd],
+    [baseToday, yesterday, dayBeforeYesterday, monthStart, monthEnd],
   );
 
   const row = result.rows[0];
@@ -995,6 +998,7 @@ async function getExpenseSummary(baseToday: string) {
   return {
     spentToday: toNumber(row?.spent_today) || 0,
     spentYesterday: toNumber(row?.spent_yesterday) || 0,
+    spentDayBeforeYesterday: toNumber(row?.spent_day_before_yesterday) || 0,
     spentMonth: toNumber(row?.spent_month) || 0,
   };
 }
