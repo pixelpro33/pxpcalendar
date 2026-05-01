@@ -1118,6 +1118,8 @@ export default function HomeClient({ version }: Props) {
             <MonthlyDashboard
               currentItems={dashboardMonthItems}
               previousItems={previousDashboardItems}
+              currentExpenses={expenses}
+              previousExpenses={previousExpenses}
               viewMode={dashboardViewMode}
             />
 

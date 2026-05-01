@@ -1129,15 +1129,21 @@ export async function buildWhatsAppMessage({
   ];
 
   if (finalSettings.includeMonthlySummary) {
+    const realMonthSpent = monthlyPaid + expenseSummary.spentMonth;
+    const estimatedMonthTotal = realMonthSpent + monthlyRemaining;
+
     lines.push(
       "",
       "💰 Rezumat luna",
-      `✅ Platit: ${formatLei(monthlyPaid)} lei`,
-      `⏳ Ramas luna: ${formatLei(monthlyRemaining)} lei`,
-      `💸 Cheltuit azi: ${formatLei(expenseSummary.spentToday)} lei`,
-      `💸 Cheltuit ieri: ${formatLei(expenseSummary.spentYesterday)} lei`,
-      `💸 Cheltuit luna: ${formatLei(expenseSummary.spentMonth)} lei`,
-      `📊 Progres: ${paidPercent}% platit`,
+      `✅ Plati achitate: ${formatLei(monthlyPaid)} lei`,
+      `💸 Cheltuieli spontane: ${formatLei(expenseSummary.spentMonth)} lei`,
+      `📊 Iesiri reale luna: ${formatLei(realMonthSpent)} lei`,
+      `⏳ Ramas de plata: ${formatLei(monthlyRemaining)} lei`,
+      `🧾 Estimat final luna: ${formatLei(estimatedMonthTotal)} lei`,
+      "",
+      "💸 Cheltuieli recente",
+      `• Azi: ${formatLei(expenseSummary.spentToday)} lei`,
+      `• Ieri: ${formatLei(expenseSummary.spentYesterday)} lei`,
       `💳 De platit in urmatoarele ${finalSettings.reminderDaysAhead} zile: ${formatLei(
         upcomingPaymentsTotal,
       )} lei`,

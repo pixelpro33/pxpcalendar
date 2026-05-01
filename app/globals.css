@@ -1436,3 +1436,26 @@
     align-items: center;
   }
 }
+
+/* Dashboard combined finance polish */
+.pxp-dashboard-chart-mini-cards {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 7px !important;
+}
+
+@media (min-width: 520px) {
+  .pxp-dashboard-chart-mini-cards {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
+.pxp-dashboard-clean-footer {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 6px 10px !important;
+}
+
+.pxp-dashboard-clean-footer span {
+  flex: 0 0 auto !important;
+}
