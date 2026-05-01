@@ -1,27 +1,24 @@
-import type { ReactNode } from "react";
 import { CalendarItem } from "./types";
 import { TYPE_CONFIG } from "./mockData";
 import { formatEventDate, getDaysRemaining, getRepeatLabel } from "./utils";
 
-function DetailCard({
-  label,
-  children,
-  wide = false,
-}: {
-  label: string;
-  children: ReactNode;
-  wide?: boolean;
-}) {
-  return (
-    <div className={`pxp-detail-card ${wide ? "is-wide" : ""}`}>
-      <div className="pxp-section-label">{label}</div>
-      <div className="pxp-detail-value">{children}</div>
-    </div>
-  );
-}
-
 function getBaseId(item: CalendarItem) {
   return item.baseId || item.id;
+}
+
+function DetailLine({
+  label,
+  value,
+}: {
+  label: string;
+  value: string | number;
+}) {
+  return (
+    <div className="pxp-event-line">
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  );
 }
 
 export default function EventDetailsModal({
@@ -43,17 +40,28 @@ export default function EventDetailsModal({
   const baseId = getBaseId(item);
 
   return (
-    <div className="pxp-overlay" onClick={onClose}>
-      <section className="pxp-sheet" onClick={(e) => e.stopPropagation()}>
-        <div className="pxp-sheet-grabber" />
+    <div className="pxp-event-drawer-overlay" onClick={onClose}>
+      <aside className="pxp-event-drawer" onClick={(e) => e.stopPropagation()}>
+        <div className="pxp-event-drawer-bar">
+          <div className="pxp-event-drawer-kicker">Detalii</div>
 
-        <div className="pxp-detail-head">
-          <div style={{ minWidth: 0 }}>
+          <button
+            className="pxp-event-close"
+            onClick={onClose}
+            type="button"
+            aria-label="Close"
+          >
+            ×
+          </button>
+        </div>
+
+        <div className="pxp-event-drawer-content">
+          <div className="pxp-event-hero">
             <div
-              className="pxp-type-badge"
+              className="pxp-event-type-pill"
               style={{
                 background: cfg.bg,
-                border: `1px solid ${cfg.border}`,
+                borderColor: cfg.border,
                 color: cfg.color,
               }}
             >
@@ -61,98 +69,95 @@ export default function EventDetailsModal({
               <span>{cfg.label}</span>
             </div>
 
-            <div
-              className="pxp-detail-title"
+            <h2
+              className="pxp-event-title"
               style={{
                 opacity: item.completed ? 0.55 : 1,
                 textDecoration: item.completed ? "line-through" : "none",
               }}
             >
               {item.title}
-            </div>
+            </h2>
 
-            <div className="pxp-detail-subtitle">
+            <div className="pxp-event-subtitle">
               {getDaysRemaining(item)}
               {item.isOccurrence ? " • repetare" : ""}
             </div>
           </div>
 
-          <button
-            className="pxp-icon-button"
-            onClick={onClose}
-            type="button"
-            aria-label="Close"
-          >
-            ✕
-          </button>
-        </div>
+          <div className="pxp-event-status-row">
+            <div className={item.completed ? "is-completed" : "is-pending"}>
+              <span>{item.completed ? "✅" : "⏳"}</span>
+              <strong>{item.completed ? "Completed" : "Pending"}</strong>
+            </div>
 
-        <div className="pxp-details-grid">
-          <DetailCard label="Data">{formatEventDate(item)}</DetailCard>
+            <div>
+              <span>🔁</span>
+              <strong>{getRepeatLabel(item)}</strong>
+            </div>
+          </div>
 
-          <DetailCard label="Status">
-            {item.completed ? "Completed" : "Pending"}
-          </DetailCard>
+          <div className="pxp-event-lines">
+            <DetailLine label="Data" value={formatEventDate(item)} />
+            <DetailLine label="All day" value={item.allDay ? "Da" : "Nu"} />
 
-          <DetailCard label="All day">{item.allDay ? "Da" : "Nu"}</DetailCard>
+            {item.paymentStatus && item.paymentStatus !== "none" && (
+              <DetailLine label="Payment" value={item.paymentStatus} />
+            )}
 
-          <DetailCard label="Repeat">{getRepeatLabel(item)}</DetailCard>
+            {typeof item.amount === "number" && (
+              <DetailLine label="Suma" value={`${item.amount} lei`} />
+            )}
 
-          {item.paymentStatus && item.paymentStatus !== "none" && (
-            <DetailCard label="Payment status">{item.paymentStatus}</DetailCard>
-          )}
+            {typeof item.actualAmount === "number" && (
+              <DetailLine label="Platit" value={`${item.actualAmount} lei`} />
+            )}
 
-          {typeof item.amount === "number" && (
-            <DetailCard label="Suma">{item.amount} lei</DetailCard>
-          )}
+            {item.category && (
+              <DetailLine label="Categorie" value={item.category} />
+            )}
 
-          {item.category && (
-            <DetailCard label="Categorie">{item.category}</DetailCard>
-          )}
-
-          {typeof item.actualAmount === "number" && (
-            <DetailCard label="Suma platita">
-              {item.actualAmount} lei
-            </DetailCard>
-          )}
-
-          {item.address && (
-            <DetailCard label="Adresa">{item.address}</DetailCard>
-          )}
+            {item.address && (
+              <DetailLine label="Locatie" value={item.address} />
+            )}
+          </div>
 
           {item.details && (
-            <DetailCard label="Detalii" wide>
-              {item.details}
-            </DetailCard>
+            <div className="pxp-event-note">
+              <span>Detalii</span>
+              <p>{item.details}</p>
+            </div>
           )}
-
-          <div className="pxp-actions-grid">
-            <button
-              className={`pxp-action ${item.completed ? "warning" : "success"}`}
-              onClick={() => onToggleComplete(baseId)}
-              type="button"
-            >
-              {item.completed ? "Mark pending" : "Mark completed"}
-            </button>
-
-            <button
-              className="pxp-action neutral"
-              onClick={() => onEdit(item)}
-              type="button"
-            >
-              Edit
-            </button>
-
-            <button
-              className="pxp-action danger"
-              onClick={() => onDelete(baseId)}
-              type="button"
-            >
-              Delete
-            </button>
-          </div>
         </div>
-      </section>
+
+        <div className="pxp-event-drawer-actions">
+          <button
+            className={`pxp-event-action ${
+              item.completed ? "warning" : "success"
+            }`}
+            onClick={() => onToggleComplete(baseId)}
+            type="button"
+          >
+            {item.completed ? "Mark pending" : "Mark completed"}
+          </button>
+
+          <button
+            className="pxp-event-action neutral"
+            onClick={() => onEdit(item)}
+            type="button"
+          >
+            Edit
+          </button>
+
+          <button
+            className="pxp-event-action danger"
+            onClick={() => onDelete(baseId)}
+            type="button"
+          >
+            Delete
+          </button>
+        </div>
+      </aside>
     </div>
   );
 }
