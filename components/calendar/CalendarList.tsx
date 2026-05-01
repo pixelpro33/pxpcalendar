@@ -1,9 +1,16 @@
 import EventChip from "./EventChip";
 import { CalendarItem } from "./types";
 
-function pad(n: number) {
-  return String(n).padStart(2, "0");
-}
+type Props = {
+  daysInMonth: number;
+  groupedByDay: Map<number, CalendarItem[]>;
+  selectedMonthLabel: string;
+  selectedYear: number;
+  hideEmptyDays: boolean;
+  onSelectItem: (item: CalendarItem) => void;
+};
+
+const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 export default function CalendarList({
   daysInMonth,
@@ -12,50 +19,44 @@ export default function CalendarList({
   selectedYear,
   hideEmptyDays,
   onSelectItem,
-}: {
-  daysInMonth: number;
-  groupedByDay: Map<number, CalendarItem[]>;
-  selectedMonthLabel: string;
-  selectedYear: number;
-  hideEmptyDays: boolean;
-  onSelectItem: (item: CalendarItem) => void;
-}) {
-  const days = Array.from({ length: daysInMonth }, (_, index) => index + 1).filter(
-    (day) => {
-      if (!hideEmptyDays) return true;
-      return (groupedByDay.get(day) || []).length > 0;
-    },
-  );
+}: Props) {
+  const days = Array.from({ length: daysInMonth }, (_, index) => index + 1);
 
   return (
-    <section className="pxp-list" aria-label="Calendar list">
+    <section className="calendar-list">
       {days.map((day) => {
-        const dayItems = groupedByDay.get(day) || [];
-        const dateLabel = `${pad(day)} ${selectedMonthLabel} ${selectedYear}`;
+        const items = groupedByDay.get(day) || [];
+
+        if (hideEmptyDays && items.length === 0) {
+          return null;
+        }
+
+        const date = new Date(`${selectedYear}-${selectedMonthLabel}-${day}`);
 
         return (
-          <article className="pxp-list-day pxp-day-card" key={day}>
-            <div className="pxp-list-head">
-              <div className="pxp-list-date">{dateLabel}</div>
-              <div className="pxp-day-count">
-                {dayItems.length} item{dayItems.length === 1 ? "" : "s"}
-              </div>
+          <div key={day} className="calendar-list-row">
+            <div className="calendar-list-date">
+              <span className="calendar-list-weekday">
+                {WEEKDAYS[date.getDay()]}
+              </span>
+              <span className="calendar-list-day">{day}</span>
             </div>
 
-            {dayItems.length === 0 ? (
-              <div className="pxp-empty-text">Fara evenimente</div>
-            ) : (
-              <div className="pxp-day-events">
-                {dayItems.map((item) => (
+            <div className="calendar-list-events">
+              {items.length > 0 ? (
+                items.map((item) => (
                   <EventChip
                     key={item.id}
                     item={item}
-                    onClick={() => onSelectItem(item)}
+                    variant="list"
+                    onClick={onSelectItem}
                   />
-                ))}
-              </div>
-            )}
-          </article>
+                ))
+              ) : (
+                <div className="calendar-list-empty">No events</div>
+              )}
+            </div>
+          </div>
         );
       })}
     </section>

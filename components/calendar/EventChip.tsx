@@ -1,38 +1,40 @@
 import { CalendarItem } from "./types";
 import { TYPE_CONFIG } from "./mockData";
-import { getDaysRemaining, getEventChipStyle } from "./utils";
 
-export default function EventChip({
-  item,
-  onClick,
-  compact = false,
-}: {
+type Props = {
   item: CalendarItem;
-  onClick: () => void;
-  compact?: boolean;
-}) {
-  const typeCfg = TYPE_CONFIG[item.type];
-  const style = getEventChipStyle(item);
+  variant?: "grid" | "list";
+  onClick: (item: CalendarItem) => void;
+};
+
+export default function EventChip({ item, variant = "grid", onClick }: Props) {
+  const config = TYPE_CONFIG[item.type];
+
+  const amount =
+    typeof item.amount === "number" && item.amount > 0
+      ? ` - ${item.amount} lei`
+      : "";
+
+  const title = `${item.title}${amount}`;
+
+  const style = {
+    background: item.customColor || config.bg,
+    borderColor: item.customColor || config.border,
+    color: config.color,
+  };
 
   return (
     <button
-      className={`pxp-chip ${compact ? "is-compact" : ""}`}
-      onClick={onClick}
       type="button"
+      className={`event-chip event-chip-${variant} ${
+        item.completed ? "is-completed" : ""
+      }`}
       style={style}
-      title={item.title}
+      onClick={() => onClick(item)}
+      title={title}
     >
-      <span className="pxp-chip-main">
-        <span className="pxp-chip-icon">{typeCfg.icon}</span>
-
-        {!item.allDay && item.time && (
-          <span className="pxp-chip-time">{item.time}</span>
-        )}
-
-        <span className="pxp-chip-title">{item.title}</span>
-      </span>
-
-      {!compact && <span className="pxp-chip-days">{getDaysRemaining(item)}</span>}
+      <span className="event-chip-icon">{config.icon}</span>
+      <span className="event-chip-title">{title}</span>
     </button>
   );
 }

@@ -886,3 +886,225 @@ input[type="time"] {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/* Calendar quick fix - classic readable grid + agenda list */
+
+.calendar-grid-wrap {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(92px, 1fr));
+  min-width: 644px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.calendar-weekday {
+  padding: 10px 8px;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 11px;
+  font-weight: 800;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(92px, 1fr));
+  min-width: 644px;
+}
+
+.calendar-day {
+  min-height: 112px;
+  padding: 7px 6px;
+  border-right: 1px solid rgba(255, 255, 255, 0.075);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.075);
+  overflow: hidden;
+}
+
+.calendar-day:nth-child(7n) {
+  border-right: 0;
+}
+
+.calendar-day.empty {
+  background: rgba(255, 255, 255, 0.018);
+}
+
+.calendar-day-number {
+  margin-bottom: 7px;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 13px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.calendar-day-events {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.calendar-more {
+  width: 100%;
+  height: 18px;
+  border: 0;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 10px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.event-chip {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  color: white;
+  text-align: left;
+}
+
+.event-chip-grid {
+  height: 20px;
+  border-radius: 5px;
+  padding: 0 5px;
+  gap: 3px;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.event-chip-list {
+  min-height: 48px;
+  border-radius: 9px;
+  padding: 0 14px;
+  gap: 8px;
+  font-size: 17px;
+  font-weight: 750;
+  line-height: 1.1;
+}
+
+.event-chip-icon {
+  flex: 0 0 auto;
+  opacity: 0.9;
+}
+
+.event-chip-title {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.event-chip.is-completed {
+  opacity: 0.48;
+}
+
+.event-chip.is-completed .event-chip-title {
+  text-decoration: line-through;
+}
+
+.calendar-list {
+  display: grid;
+  gap: 22px;
+  padding: 8px 0 80px;
+}
+
+.calendar-list-row {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.calendar-list-date {
+  padding-top: 2px;
+  text-align: center;
+}
+
+.calendar-list-weekday {
+  display: block;
+  margin-bottom: 3px;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 12px;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.calendar-list-day {
+  display: block;
+  color: rgba(255, 255, 255, 0.94);
+  font-size: 32px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.calendar-list-events {
+  display: grid;
+  gap: 9px;
+  min-width: 0;
+}
+
+.calendar-list-empty {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.035);
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 14px;
+  font-weight: 650;
+}
+
+@media (max-width: 640px) {
+  .calendar-grid-wrap {
+    margin-left: -10px;
+    margin-right: -10px;
+    width: calc(100% + 20px);
+    border-radius: 0;
+    border-left: 0;
+    border-right: 0;
+  }
+
+  .calendar-weekdays,
+  .calendar-grid {
+    grid-template-columns: repeat(7, minmax(82px, 1fr));
+    min-width: 574px;
+  }
+
+  .calendar-day {
+    min-height: 104px;
+    padding: 6px 5px;
+  }
+
+  .event-chip-grid {
+    height: 19px;
+    font-size: 10px;
+  }
+
+  .calendar-list-row {
+    grid-template-columns: 64px minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .calendar-list-day {
+    font-size: 30px;
+  }
+
+  .event-chip-list {
+    min-height: 48px;
+    font-size: 16px;
+  }
+}

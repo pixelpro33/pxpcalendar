@@ -144,13 +144,15 @@ export default function HomeClient({ version }: Props) {
           <CalendarGrid
             daysInMonth={daysInMonth}
             groupedByDay={groupedByDay}
+            selectedYear={selectedYear}
+            selectedMonth={selectedMonth}
             onSelectItem={setSelectedItem}
           />
         ) : (
           <CalendarList
             daysInMonth={daysInMonth}
             groupedByDay={groupedByDay}
-            selectedMonthLabel={MONTHS[selectedMonth]}
+            selectedMonthLabel={String(selectedMonth + 1)}
             selectedYear={selectedYear}
             hideEmptyDays={hideEmptyDays}
             onSelectItem={setSelectedItem}
