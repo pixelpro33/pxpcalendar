@@ -16,6 +16,16 @@ function getMondayFirstOffset(year: number, monthIndex: number) {
   return jsDay === 0 ? 6 : jsDay - 1;
 }
 
+function isCurrentDay(year: number, monthIndex: number, day: number) {
+  const today = new Date();
+
+  return (
+    year === today.getFullYear() &&
+    monthIndex === today.getMonth() &&
+    day === today.getDate()
+  );
+}
+
 export default function CalendarGrid({
   daysInMonth,
   groupedByDay,
@@ -51,13 +61,23 @@ export default function CalendarGrid({
             );
           }
 
+          const isToday = isCurrentDay(selectedYear, selectedMonth, day);
           const items = groupedByDay.get(day) || [];
           const visibleItems = items.slice(0, 3);
           const hiddenCount = Math.max(items.length - visibleItems.length, 0);
 
           return (
-            <div key={day} className="calendar-day">
-              <div className="calendar-day-number">{day}</div>
+            <div
+              key={day}
+              className={`calendar-day ${isToday ? "is-today" : ""}`}
+            >
+              <div className="calendar-day-head">
+                <div
+                  className={`calendar-day-number ${isToday ? "is-today" : ""}`}
+                >
+                  {day}
+                </div>
+              </div>
 
               <div className="calendar-day-events">
                 {visibleItems.map((item) => (
