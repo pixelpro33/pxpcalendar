@@ -9,7 +9,6 @@ import CalendarHeader from "@/components/calendar/CalendarHeader";
 import CalendarList from "@/components/calendar/CalendarList";
 import CalendarStats from "@/components/calendar/CalendarStats";
 import ColorPickerModal from "@/components/calendar/ColorPickerModal";
-import EventDetailsModal from "@/components/calendar/EventDetailsModal";
 import MonthlyDashboard from "@/components/calendar/MonthlyDashboard";
 import RepeatModal from "@/components/calendar/RepeatModal";
 import SettingsPanel, {
@@ -830,7 +829,7 @@ export default function HomeClient({ version }: Props) {
                 groupedByDay={groupedByDay}
                 selectedYear={selectedYear}
                 selectedMonth={selectedMonth}
-                onSelectItem={setSelectedItem}
+                onSelectItem={openEditDrawer}
               />
             ) : (
               <CalendarList
@@ -839,7 +838,7 @@ export default function HomeClient({ version }: Props) {
                 selectedMonthLabel={String(selectedMonth + 1)}
                 selectedYear={selectedYear}
                 hideEmptyDays={hideEmptyDays}
-                onSelectItem={setSelectedItem}
+                onSelectItem={openEditDrawer}
               />
             )}
           </>
@@ -900,14 +899,6 @@ export default function HomeClient({ version }: Props) {
         value={draft.customColor}
         setValue={(value) => setDraft({ ...draft, customColor: value })}
         onClose={() => setShowColorModal(false)}
-      />
-
-      <EventDetailsModal
-        item={selectedItem}
-        onClose={() => setSelectedItem(null)}
-        onToggleComplete={toggleComplete}
-        onDelete={deleteItem}
-        onEdit={openEditDrawer}
       />
     </main>
   );
