@@ -1,3 +1,4 @@
+/* =========================
    Dashboard
    ========================= */
 
@@ -52,7 +53,7 @@
 
 .pxp-dashboard-summary {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
   margin-bottom: 12px;
 }
@@ -517,3 +518,53 @@
   font-weight: 950;
 }
 
+/* Dashboard summary - more compact */
+.pxp-dashboard-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.pxp-dashboard-summary .pxp-dashboard-card:last-child {
+  grid-column: 1 / -1;
+}
+
+.pxp-dashboard-card {
+  min-width: 0;
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.045);
+  padding: 10px 12px;
+}
+
+.pxp-dashboard-card span {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--muted-soft);
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+.pxp-dashboard-card strong {
+  display: block;
+  color: white;
+  font-size: 17px;
+  font-weight: 900;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pxp-dashboard-card small {
+  display: block;
+  margin-top: 5px;
+  color: rgba(255, 255, 255, 0.54);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.25;
+}

@@ -1,3 +1,4 @@
+/* =========================
    Calendar grid / list
    ========================= */
 
@@ -352,3 +353,78 @@
 }
 
 /* =========================
+
+/* Calendar list mode - slimmer rows and chips */
+.calendar-list {
+  display: grid;
+  gap: 14px;
+  padding: 6px 0 56px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.calendar-list-row {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.calendar-list-date {
+  min-width: 0;
+  padding-top: 1px;
+  text-align: center;
+}
+
+.calendar-list-weekday {
+  display: block;
+  margin-bottom: 2px;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 11px;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.calendar-list-day {
+  display: block;
+  color: rgba(255, 255, 255, 0.94);
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.calendar-list-events {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.event-chip-list {
+  min-height: 40px;
+  border-radius: 8px;
+  padding: 0 12px;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.05;
+}
+
+.calendar-list-empty {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.035);
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 13px;
+  font-weight: 650;
+}

@@ -736,3 +736,28 @@
     align-items: start;
   }
 }
+
+@media (max-width: 719px) {
+  .calendar-list-row {
+    grid-template-columns: 52px minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .calendar-list-day {
+    font-size: 24px;
+  }
+
+  .event-chip-list {
+    min-height: 40px;
+    font-size: 14px;
+    padding: 0 12px;
+  }
+
+  .pxp-dashboard-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .pxp-dashboard-summary .pxp-dashboard-card:last-child {
+    grid-column: 1 / -1;
+  }
+}

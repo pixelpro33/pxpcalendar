@@ -1,3 +1,4 @@
+/* =========================
    Stats / states / filters
    ========================= */
 
@@ -74,3 +75,54 @@
 }
 
 /* =========================
+
+
+/* Top payment stats - one line per card */
+.pxp-stats {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 2px 0 10px;
+  padding: 6px 0 8px;
+  background: linear-gradient(
+    180deg,
+    rgba(9, 9, 13, 0.96),
+    rgba(9, 9, 13, 0.76)
+  );
+  backdrop-filter: blur(16px);
+}
+
+.pxp-stat-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.pxp-stat-label {
+  margin-bottom: 0;
+  color: var(--muted-soft);
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.pxp-stat-value {
+  flex: 0 0 auto;
+  overflow: hidden;
+  font-size: 18px;
+  font-weight: 900;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: right;
+}
