@@ -70,6 +70,12 @@ type ExpenseSummaryRow = {
   spent_month: string | number | null;
 };
 
+type IncomeSummaryRow = {
+  income_today: string | number | null;
+  income_yesterday: string | number | null;
+  income_month: string | number | null;
+};
+
 type MessageItem = {
   id: string;
   title: string;
