@@ -476,11 +476,15 @@ export default function HomeClient({ version }: Props) {
   function openEditDrawer(item: CalendarItem) {
     const baseId = getBaseId(item);
     const baseItem = items.find((entry) => entry.id === baseId) || item;
+    const nextDraft = calendarItemToDraft(baseItem);
 
-    setEditingItemId(baseId);
-    setDraft(calendarItemToDraft(baseItem));
     setSelectedItem(null);
-    setShowAddDrawer(true);
+
+    window.requestAnimationFrame(() => {
+      setEditingItemId(baseId);
+      setDraft(nextDraft);
+      setShowAddDrawer(true);
+    });
   }
 
   async function saveDraftItem() {
