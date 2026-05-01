@@ -17,6 +17,7 @@ export function formatEventDate(item: CalendarItem) {
   const date = new Date(
     `${item.date}T${item.allDay ? "00:00" : item.time || "00:00"}`,
   );
+
   return new Intl.DateTimeFormat("ro-RO", {
     weekday: "long",
     day: "2-digit",
@@ -41,6 +42,7 @@ export function formatCompactDate(
   allDay?: boolean,
 ) {
   const value = `${date}T${allDay ? "00:00" : time || "00:00"}`;
+
   return new Intl.DateTimeFormat("ro-RO", {
     day: "2-digit",
     month: "short",
@@ -61,6 +63,7 @@ export function getDaysRemaining(item: CalendarItem) {
     now.getMonth(),
     now.getDate(),
   ).getTime();
+
   const startTarget = new Date(
     target.getFullYear(),
     target.getMonth(),
@@ -115,6 +118,7 @@ export function buildGroupedByDay(
       if (!b.time) return 1;
       return a.time.localeCompare(b.time);
     });
+
     map.set(day, dayItems);
   }
 
@@ -142,6 +146,11 @@ export function buildDraft(year: number, monthIndex: number): DraftEvent {
 }
 
 export function createItemFromDraft(draft: DraftEvent): CalendarItem {
+  const amount =
+    draft.type === "pay" || draft.amount.trim()
+      ? Number(draft.amount || 0)
+      : undefined;
+
   return {
     id: crypto.randomUUID(),
     title: draft.title.trim(),
@@ -151,12 +160,12 @@ export function createItemFromDraft(draft: DraftEvent): CalendarItem {
     time: draft.allDay ? undefined : draft.time,
     allDay: draft.allDay,
     completed: false,
+    status: "pending",
     repeat: draft.repeat,
     customRepeat: draft.repeat === "custom" ? draft.customRepeat : undefined,
-    amount:
-      draft.type === "pay" || draft.amount.trim()
-        ? Number(draft.amount || 0)
-        : undefined,
+    amount,
+    actualAmount: undefined,
+    paymentStatus: draft.type === "pay" ? "unpaid" : amount ? "unpaid" : "none",
     address: draft.address.trim() || undefined,
     customColor: draft.customColor.trim() || undefined,
   };
@@ -186,14 +195,43 @@ export function filterMonthItems(
   });
 }
 
+export function getItemPaidAmount(item: CalendarItem) {
+  if (!item.completed) return 0;
+
+  if (typeof item.actualAmount === "number") {
+    return item.actualAmount;
+  }
+
+  if (typeof item.amount === "number") {
+    return item.amount;
+  }
+
+  return 0;
+}
+
+export function getItemRemainingAmount(item: CalendarItem) {
+  if (item.completed) return 0;
+
+  if (item.type === "pay" || item.type === "event") {
+    return item.amount || 0;
+  }
+
+  return 0;
+}
+
 export function getMonthPayTotals(items: CalendarItem[]) {
-  const pays = items.filter((i) => i.type === "pay");
-  const paid = pays
-    .filter((i) => i.completed)
-    .reduce((sum, i) => sum + (i.amount || 0), 0);
-  const remaining = pays
-    .filter((i) => !i.completed)
-    .reduce((sum, i) => sum + (i.amount || 0), 0);
+  const moneyItems = items.filter(
+    (item) => item.type === "pay" || typeof item.amount === "number",
+  );
+
+  const paid = moneyItems.reduce(
+    (sum, item) => sum + getItemPaidAmount(item),
+    0,
+  );
+  const remaining = moneyItems.reduce(
+    (sum, item) => sum + getItemRemainingAmount(item),
+    0,
+  );
 
   return { paid, remaining };
 }

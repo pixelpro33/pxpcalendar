@@ -9,6 +9,8 @@ export type RepeatType =
   | "custom";
 
 export type RepeatUnit = "day" | "week" | "month" | "year";
+export type EventStatus = "pending" | "completed";
+export type PaymentStatus = "none" | "unpaid" | "paid";
 
 export type CustomRepeatConfig = {
   interval: number;
@@ -25,11 +27,15 @@ export type CalendarItem = {
   time?: string;
   allDay: boolean;
   completed: boolean;
+  status: EventStatus;
   repeat: RepeatType;
   customRepeat?: CustomRepeatConfig;
   amount?: number;
+  actualAmount?: number;
+  paymentStatus: PaymentStatus;
   customColor?: string;
   address?: string;
+  completedAt?: string;
 };
 
 export type TypeConfig = {

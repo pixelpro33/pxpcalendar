@@ -13,7 +13,6 @@ import RepeatModal from "@/components/calendar/RepeatModal";
 import {
   buildDraft,
   buildGroupedByDay,
-  createItemFromDraft,
   filterMonthItems,
   getDaysInMonth,
   getMonthPayTotals,
@@ -23,6 +22,8 @@ import {
   DraftEvent,
   EventType,
   FiltersState,
+  RepeatType,
+  RepeatUnit,
   ViewMode,
 } from "@/components/calendar/types";
 
@@ -33,8 +34,25 @@ type Props = {
 type DbEvent = {
   id: string;
   title: string;
+  details: string;
+  type: EventType;
   event_at: string;
-  created_at: string;
+  all_day: boolean;
+  status: "pending" | "completed";
+  amount: number | null;
+  actual_amount: number | null;
+  payment_status: "none" | "unpaid" | "paid";
+  address: string;
+  custom_color: string;
+  repeat_type: RepeatType;
+  repeat_interval: number | null;
+  repeat_unit: RepeatUnit | null;
+  custom_repeat_config: {
+    interval?: number;
+    unit?: RepeatUnit;
+    monthlyMode?: "same_day";
+  } | null;
+  completed_at: string | null;
 };
 
 function pad(value: number) {
@@ -50,20 +68,70 @@ function toLocalCalendarItem(row: DbEvent): CalendarItem {
   const hour = pad(date.getHours());
   const minute = pad(date.getMinutes());
 
+  const repeat = row.repeat_type || "none";
+  const completed = row.status === "completed";
+
   return {
     id: row.id,
     title: row.title,
-    type: "event",
+    details: row.details || undefined,
+    type: row.type || "event",
     date: `${year}-${month}-${day}`,
-    time: `${hour}:${minute}`,
-    allDay: false,
-    completed: false,
-    repeat: "none",
+    time: row.all_day ? undefined : `${hour}:${minute}`,
+    allDay: Boolean(row.all_day),
+    completed,
+    status: completed ? "completed" : "pending",
+    repeat,
+    customRepeat:
+      repeat === "custom"
+        ? {
+            interval:
+              row.custom_repeat_config?.interval || row.repeat_interval || 1,
+            unit: row.custom_repeat_config?.unit || row.repeat_unit || "week",
+            monthlyMode: row.custom_repeat_config?.monthlyMode || "same_day",
+          }
+        : undefined,
+    amount:
+      typeof row.amount === "number"
+        ? row.amount
+        : row.amount === null
+          ? undefined
+          : Number(row.amount),
+    actualAmount:
+      typeof row.actual_amount === "number"
+        ? row.actual_amount
+        : row.actual_amount === null
+          ? undefined
+          : Number(row.actual_amount),
+    paymentStatus: row.payment_status || "none",
+    address: row.address || undefined,
+    customColor: row.custom_color || undefined,
+    completedAt: row.completed_at || undefined,
   };
 }
 
 function draftToEventAt(draft: DraftEvent) {
   return `${draft.date}T${draft.allDay ? "00:00" : draft.time}:00`;
+}
+
+function draftToApiPayload(draft: DraftEvent) {
+  const amount = draft.amount.trim() ? Number(draft.amount) : null;
+
+  return {
+    title: draft.title.trim(),
+    details: draft.details.trim(),
+    type: draft.type,
+    eventAt: draftToEventAt(draft),
+    allDay: draft.allDay,
+    amount,
+    address: draft.address.trim(),
+    customColor: draft.customColor.trim(),
+    repeatType: draft.repeat,
+    repeatInterval:
+      draft.repeat === "custom" ? draft.customRepeat.interval : null,
+    repeatUnit: draft.repeat === "custom" ? draft.customRepeat.unit : null,
+    customRepeatConfig: draft.repeat === "custom" ? draft.customRepeat : null,
+  };
 }
 
 export default function HomeClient({ version }: Props) {
@@ -180,6 +248,11 @@ export default function HomeClient({ version }: Props) {
   async function saveDraftItem() {
     if (!draft.title.trim()) return;
 
+    if (draft.type === "pay" && !draft.amount.trim()) {
+      setEventsError("Pentru pay, suma este obligatorie.");
+      return;
+    }
+
     try {
       setEventsError("");
 
@@ -188,10 +261,7 @@ export default function HomeClient({ version }: Props) {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          title: draft.title.trim(),
-          eventAt: draftToEventAt(draft),
-        }),
+        body: JSON.stringify(draftToApiPayload(draft)),
       });
 
       const data = await response.json();
@@ -200,13 +270,11 @@ export default function HomeClient({ version }: Props) {
         throw new Error(data?.message || "Nu am putut salva evenimentul.");
       }
 
-      if (data?.event) {
-        setItems((prev) => [...prev, toLocalCalendarItem(data.event)]);
-      } else {
-        const fallbackItem = createItemFromDraft(draft);
-        setItems((prev) => [...prev, fallbackItem]);
+      if (!data?.event) {
+        throw new Error("API-ul nu a returnat evenimentul salvat.");
       }
 
+      setItems((prev) => [...prev, toLocalCalendarItem(data.event)]);
       setShowAddDrawer(false);
     } catch (error) {
       setEventsError(
@@ -217,18 +285,126 @@ export default function HomeClient({ version }: Props) {
     }
   }
 
-  function toggleComplete(itemId: string) {
-    setItems((prev) =>
-      prev.map((item) =>
-        item.id === itemId ? { ...item, completed: !item.completed } : item,
-      ),
-    );
+  async function toggleComplete(itemId: string) {
+    const currentItem = items.find((item) => item.id === itemId);
+    if (!currentItem) return;
 
-    setSelectedItem((prev) =>
-      prev && prev.id === itemId
-        ? { ...prev, completed: !prev.completed }
-        : prev,
-    );
+    const nextStatus =
+      currentItem.status === "completed" ? "pending" : "completed";
+
+    let actualAmount: number | null = null;
+
+    if (
+      nextStatus === "completed" &&
+      currentItem.type === "event" &&
+      typeof currentItem.amount !== "number"
+    ) {
+      const value = window.prompt(
+        "Ce suma ai platit? Lasa gol daca nu exista suma.",
+        "",
+      );
+
+      if (value !== null && value.trim()) {
+        const parsed = Number(value);
+        actualAmount = Number.isFinite(parsed) ? parsed : null;
+      }
+    }
+
+    const previousItems = items;
+    const previousSelected = selectedItem;
+
+    try {
+      setEventsError("");
+
+      setItems((prev) =>
+        prev.map((item) =>
+          item.id === itemId
+            ? {
+                ...item,
+                completed: nextStatus === "completed",
+                status: nextStatus,
+                actualAmount:
+                  nextStatus === "completed" && actualAmount !== null
+                    ? actualAmount
+                    : nextStatus === "pending"
+                      ? undefined
+                      : item.actualAmount,
+                paymentStatus:
+                  nextStatus === "completed"
+                    ? item.type === "pay" || typeof item.amount === "number"
+                      ? "paid"
+                      : "none"
+                    : item.type === "pay" || typeof item.amount === "number"
+                      ? "unpaid"
+                      : "none",
+              }
+            : item,
+        ),
+      );
+
+      setSelectedItem((prev) =>
+        prev && prev.id === itemId
+          ? {
+              ...prev,
+              completed: nextStatus === "completed",
+              status: nextStatus,
+              actualAmount:
+                nextStatus === "completed" && actualAmount !== null
+                  ? actualAmount
+                  : nextStatus === "pending"
+                    ? undefined
+                    : prev.actualAmount,
+              paymentStatus:
+                nextStatus === "completed"
+                  ? prev.type === "pay" || typeof prev.amount === "number"
+                    ? "paid"
+                    : "none"
+                  : prev.type === "pay" || typeof prev.amount === "number"
+                    ? "unpaid"
+                    : "none",
+            }
+          : prev,
+      );
+
+      const response = await fetch("/api/events", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: itemId,
+          status: nextStatus,
+          actualAmount,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data?.message || "Nu am putut actualiza evenimentul.");
+      }
+
+      if (data?.event) {
+        const updatedItem = toLocalCalendarItem(data.event);
+
+        setItems((prev) =>
+          prev.map((item) => (item.id === itemId ? updatedItem : item)),
+        );
+
+        setSelectedItem((prev) =>
+          prev && prev.id === itemId ? updatedItem : prev,
+        );
+      }
+    } catch (error) {
+      setItems(previousItems);
+      setSelectedItem(previousSelected);
+
+      setEventsError(
+        error instanceof Error
+          ? error.message
+          : "Nu am putut actualiza evenimentul.",
+      );
+    }
   }
 
   async function deleteItem(itemId: string) {
@@ -254,6 +430,7 @@ export default function HomeClient({ version }: Props) {
       }
     } catch (error) {
       setItems(previousItems);
+
       setEventsError(
         error instanceof Error
           ? error.message
