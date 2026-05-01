@@ -6,6 +6,7 @@ export type AppSection =
   | "calendar"
   | "dashboard"
   | "expenses"
+  | "income"
   | "categories"
   | "whatsapp";
 
@@ -23,6 +24,7 @@ const ITEMS: Array<{
   { id: "calendar", label: "Calendar", icon: "📅" },
   { id: "dashboard", label: "Dashboard", icon: "📊" },
   { id: "expenses", label: "Expenses", icon: "💸" },
+  { id: "income", label: "Income", icon: "💰" },
   { id: "categories", label: "Categories", icon: "🏷️" },
   { id: "whatsapp", label: "WhatsApp", icon: "💬" },
 ];
@@ -36,9 +38,7 @@ export default function AppNavigation({
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        setMobileOpen(false);
-      }
+      if (event.key === "Escape") setMobileOpen(false);
     }
 
     window.addEventListener("keydown", onKeyDown);

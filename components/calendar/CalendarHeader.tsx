@@ -33,7 +33,10 @@ export default function CalendarHeader({
   onOpenAddMenu: () => void;
 }) {
   const showDateControls =
-    activeSection === "calendar" || activeSection === "dashboard";
+    activeSection === "calendar" ||
+    activeSection === "dashboard" ||
+    activeSection === "expenses" ||
+    activeSection === "income";
 
   return (
     <header className="pxp-header">

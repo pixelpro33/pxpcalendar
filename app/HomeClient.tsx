@@ -2,6 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import AddEventDrawer from "@/components/calendar/AddEventDrawer";
+import AddIncomeDrawer, {
+  buildIncomeDraft,
+  IncomeDraft,
+} from "@/components/calendar/AddIncomeDrawer";
 import AddExpenseDrawer, {
   buildExpenseDraft,
   ExpenseDraft,
@@ -16,6 +20,9 @@ import CalendarStats from "@/components/calendar/CalendarStats";
 import ExpensesPanel, {
   ExpenseItem,
 } from "@/components/calendar/ExpensesPanel";
+import IncomePanel, {
+  IncomeItem,
+} from "@/components/calendar/IncomePanel";
 import EventDetailsModal from "@/components/calendar/EventDetailsModal";
 import MonthlyDashboard, {
   DashboardViewMode,
@@ -253,6 +260,11 @@ export default function HomeClient({ version }: Props) {
   const [isLoadingExpenses, setIsLoadingExpenses] = useState(false);
   const [editingExpenseId, setEditingExpenseId] = useState<string | null>(null);
 
+  const [income, setIncome] = useState<IncomeItem[]>([]);
+  const [previousIncome, setPreviousIncome] = useState<IncomeItem[]>([]);
+  const [isLoadingIncome, setIsLoadingIncome] = useState(false);
+  const [editingIncomeId, setEditingIncomeId] = useState<string | null>(null);
+
   const [selectedYear, setSelectedYear] = useState(today.getFullYear());
   const [selectedMonth, setSelectedMonth] = useState(today.getMonth());
 
@@ -281,6 +293,7 @@ export default function HomeClient({ version }: Props) {
   const [showAddMenu, setShowAddMenu] = useState(false);
   const [showAddDrawer, setShowAddDrawer] = useState(false);
   const [showExpenseDrawer, setShowExpenseDrawer] = useState(false);
+  const [showIncomeDrawer, setShowIncomeDrawer] = useState(false);
 
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
 
@@ -290,6 +303,9 @@ export default function HomeClient({ version }: Props) {
 
   const [expenseDraft, setExpenseDraft] =
     useState<ExpenseDraft>(buildExpenseDraft());
+
+  const [incomeDraft, setIncomeDraft] =
+    useState<IncomeDraft>(buildIncomeDraft());
 
   useEffect(() => {
     let cancelled = false;
@@ -436,6 +452,75 @@ export default function HomeClient({ version }: Props) {
     }
 
     loadExpenses();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedYear, selectedMonth]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadIncome() {
+      try {
+        setIsLoadingIncome(true);
+        setEventsError("");
+
+        const currentResponse = await fetch(
+          `/api/income?year=${selectedYear}&month=${selectedMonth + 1}`,
+          {
+            method: "GET",
+            cache: "no-store",
+          },
+        );
+
+        const currentData = await currentResponse.json();
+
+        if (!currentResponse.ok) {
+          throw new Error(
+            currentData?.message || "Nu am putut incarca veniturile.",
+          );
+        }
+
+        const previous = getRelativeMonth(selectedYear, selectedMonth, -1);
+
+        const previousResponse = await fetch(
+          `/api/income?year=${previous.year}&month=${previous.month + 1}`,
+          {
+            method: "GET",
+            cache: "no-store",
+          },
+        );
+
+        const previousData = await previousResponse.json();
+
+        if (!previousResponse.ok) {
+          throw new Error(
+            previousData?.message ||
+              "Nu am putut incarca veniturile lunii trecute.",
+          );
+        }
+
+        if (!cancelled) {
+          setIncome(Array.isArray(currentData) ? currentData : []);
+          setPreviousIncome(Array.isArray(previousData) ? previousData : []);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setEventsError(
+            error instanceof Error
+              ? error.message
+              : "Nu am putut incarca veniturile.",
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoadingIncome(false);
+        }
+      }
+    }
+
+    loadIncome();
 
     return () => {
       cancelled = true;
@@ -634,6 +719,13 @@ export default function HomeClient({ version }: Props) {
     setShowExpenseDrawer(true);
   }
 
+  function openAddIncomeFromMenu() {
+    setShowAddMenu(false);
+    setEditingIncomeId(null);
+    setIncomeDraft(buildIncomeDraft());
+    setShowIncomeDrawer(true);
+  }
+
   function openEditExpense(expense: ExpenseItem) {
     setEditingExpenseId(expense.id);
     setExpenseDraft({
@@ -646,6 +738,20 @@ export default function HomeClient({ version }: Props) {
       notes: expense.notes || "",
     });
     setShowExpenseDrawer(true);
+  }
+
+  function openEditIncome(item: IncomeItem) {
+    setEditingIncomeId(item.id);
+    setIncomeDraft({
+      title: item.title,
+      amount: String(item.amount),
+      category: item.category || "",
+      incomeDate: item.incomeDate,
+      incomeTime: item.incomeTime || "",
+      source: item.source || "Transfer",
+      notes: item.notes || "",
+    });
+    setShowIncomeDrawer(true);
   }
 
   function openEditDrawer(item: CalendarItem) {
@@ -748,6 +854,92 @@ export default function HomeClient({ version }: Props) {
         error instanceof Error
           ? error.message
           : "Nu am putut sterge cheltuiala.",
+      );
+    }
+  }
+
+  async function saveIncome() {
+    if (!incomeDraft.title.trim()) {
+      setEventsError("Titlul venitului lipseste.");
+      return;
+    }
+
+    if (!incomeDraft.amount.trim() || Number(incomeDraft.amount) <= 0) {
+      setEventsError("Suma trebuie sa fie mai mare decat 0.");
+      return;
+    }
+
+    try {
+      setEventsError("");
+
+      const isEditMode = Boolean(editingIncomeId);
+
+      const response = await fetch("/api/income", {
+        method: isEditMode ? "PATCH" : "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...(isEditMode ? { id: editingIncomeId } : {}),
+          ...incomeDraft,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data?.message || "Nu am putut salva venitul.");
+      }
+
+      if (data?.income) {
+        if (isEditMode) {
+          setIncome((prev) =>
+            prev.map((item) =>
+              item.id === editingIncomeId ? data.income : item,
+            ),
+          );
+        } else {
+          setIncome((prev) => [data.income, ...prev]);
+        }
+      }
+
+      setEditingIncomeId(null);
+      setShowIncomeDrawer(false);
+      setIncomeDraft(buildIncomeDraft());
+    } catch (error) {
+      setEventsError(
+        error instanceof Error ? error.message : "Nu am putut salva venitul.",
+      );
+    }
+  }
+
+  async function deleteIncome(id: string) {
+    const confirmed = window.confirm("Stergi acest venit?");
+    if (!confirmed) return;
+
+    const previous = income;
+
+    try {
+      setEventsError("");
+      setIncome((prev) => prev.filter((item) => item.id !== id));
+
+      const response = await fetch("/api/income", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data?.message || "Nu am putut sterge venitul.");
+      }
+    } catch (error) {
+      setIncome(previous);
+      setEventsError(
+        error instanceof Error ? error.message : "Nu am putut sterge venitul.",
       );
     }
   }
@@ -1119,6 +1311,8 @@ export default function HomeClient({ version }: Props) {
             previousItems={previousDashboardItems}
             currentExpenses={expenses}
             previousExpenses={previousExpenses}
+            currentIncome={income}
+            previousIncome={previousIncome}
             viewMode={dashboardViewMode}
           />
         )}
@@ -1134,6 +1328,21 @@ export default function HomeClient({ version }: Props) {
               previousExpenses={previousExpenses}
               onEdit={openEditExpense}
               onDelete={deleteExpense}
+            />
+          </>
+        )}
+
+        {activeSection === "income" && (
+          <>
+            {isLoadingIncome && (
+              <div className="pxp-inline-state">Se incarca veniturile...</div>
+            )}
+
+            <IncomePanel
+              income={income}
+              previousIncome={previousIncome}
+              onEdit={openEditIncome}
+              onDelete={deleteIncome}
             />
           </>
         )}
@@ -1158,6 +1367,7 @@ export default function HomeClient({ version }: Props) {
         onClose={() => setShowAddMenu(false)}
         onAddEvent={openAddEventFromMenu}
         onAddExpense={openAddExpenseFromMenu}
+        onAddIncome={openAddIncomeFromMenu}
       />
 
       <AddEventDrawer
@@ -1180,6 +1390,15 @@ export default function HomeClient({ version }: Props) {
         categories={activeCategoryNames}
         onClose={() => setShowExpenseDrawer(false)}
         onSave={saveExpense}
+      />
+
+      <AddIncomeDrawer
+        open={showIncomeDrawer}
+        draft={incomeDraft}
+        setDraft={setIncomeDraft}
+        categories={activeCategoryNames}
+        onClose={() => setShowIncomeDrawer(false)}
+        onSave={saveIncome}
       />
 
       <EventDetailsModal

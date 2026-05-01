@@ -1,29 +1,22 @@
 import type { ExpenseItem } from "./ExpensesPanel";
+import type { IncomeItem } from "./IncomePanel";
 import { CalendarItem } from "./types";
 
 export type DashboardViewMode = "chart" | "list";
 
 type CategoryRow = {
   category: string;
-  scheduledPaid: number;
+  paid: number;
   spontaneous: number;
   remaining: number;
   total: number;
   count: number;
   payCount: number;
   expenseCount: number;
-  previousScheduledPaid: number;
+  previousPaid: number;
   previousSpontaneous: number;
   previousRemaining: number;
   previousTotal: number;
-};
-
-type DashboardTopItem = {
-  id: string;
-  title: string;
-  category: string;
-  amount: number;
-  kind: "pay" | "expense";
 };
 
 type Props = {
@@ -31,6 +24,8 @@ type Props = {
   previousItems: CalendarItem[];
   currentExpenses: ExpenseItem[];
   previousExpenses: ExpenseItem[];
+  currentIncome: IncomeItem[];
+  previousIncome: IncomeItem[];
   viewMode: DashboardViewMode;
 };
 
@@ -53,30 +48,27 @@ function isMoneyItem(item: CalendarItem) {
 
 function getPaidAmount(item: CalendarItem) {
   if (!item.completed) return 0;
-
-  if (typeof item.actualAmount === "number") {
-    return item.actualAmount;
-  }
-
-  if (typeof item.amount === "number") {
-    return item.amount;
-  }
-
+  if (typeof item.actualAmount === "number") return item.actualAmount;
+  if (typeof item.amount === "number") return item.amount;
   return 0;
 }
 
 function getRemainingAmount(item: CalendarItem) {
   if (item.completed) return 0;
-
-  if (item.type === "pay" || item.type === "event") {
-    return item.amount || 0;
-  }
-
+  if (item.type === "pay" || item.type === "event") return item.amount || 0;
   return 0;
 }
 
 function getExpenseAmount(expense: ExpenseItem) {
   return Number(expense.amount || 0);
+}
+
+function getIncomeAmount(item: IncomeItem) {
+  return Number(item.amount || 0);
+}
+
+function sumIncome(items: IncomeItem[]) {
+  return items.reduce((sum, item) => sum + getIncomeAmount(item), 0);
 }
 
 function formatLei(value: number) {
@@ -87,7 +79,6 @@ function formatLei(value: number) {
 
 function formatSignedLei(value: number) {
   if (value === 0) return "0 lei";
-
   const sign = value > 0 ? "+" : "-";
   return `${sign}${formatLei(value)} lei`;
 }
@@ -98,10 +89,7 @@ function getPercent(value: number, total: number) {
 }
 
 function getChangePercent(current: number, previous: number) {
-  if (previous === 0) {
-    return current === 0 ? 0 : null;
-  }
-
+  if (previous === 0) return current === 0 ? 0 : null;
   return Math.round(((current - previous) / previous) * 100);
 }
 
@@ -109,17 +97,9 @@ function getShortChangeLabel(current: number, previous: number) {
   const diff = current - previous;
   const percent = getChangePercent(current, previous);
 
-  if (previous === 0 && current > 0) {
-    return `+${formatLei(current)} lei`;
-  }
-
-  if (diff === 0) {
-    return "0 lei";
-  }
-
-  if (percent === null) {
-    return formatSignedLei(diff);
-  }
+  if (previous === 0 && current > 0) return `+${formatLei(current)} lei`;
+  if (diff === 0) return "0 lei";
+  if (percent === null) return formatSignedLei(diff);
 
   return `${formatSignedLei(diff)} / ${percent > 0 ? "+" : ""}${percent}%`;
 }
@@ -132,20 +112,14 @@ function getChangeLabel(current: number, previous: number) {
     return `+${formatLei(current)} lei fata de luna trecuta`;
   }
 
-  if (diff === 0) {
-    return "La fel ca luna trecuta";
-  }
-
-  if (percent === null) {
-    return `${formatSignedLei(diff)} fata de luna trecuta`;
-  }
+  if (diff === 0) return "La fel ca luna trecuta";
+  if (percent === null) return `${formatSignedLei(diff)} fata de luna trecuta`;
 
   return `${formatSignedLei(diff)} (${percent > 0 ? "+" : ""}${percent}%) fata de luna trecuta`;
 }
 
 function getChangeClass(current: number, previous: number) {
   const diff = current - previous;
-
   if (diff > 0) return "is-up";
   if (diff < 0) return "is-down";
   return "is-flat";
@@ -161,24 +135,23 @@ function buildRows({
   previousItems: CalendarItem[];
   currentExpenses: ExpenseItem[];
   previousExpenses: ExpenseItem[];
-}): CategoryRow[] {
+}) {
   const rowsMap = new Map<string, CategoryRow>();
 
   function ensureRow(category: string) {
     const current = rowsMap.get(category);
-
     if (current) return current;
 
     const row: CategoryRow = {
       category,
-      scheduledPaid: 0,
+      paid: 0,
       spontaneous: 0,
       remaining: 0,
       total: 0,
       count: 0,
       payCount: 0,
       expenseCount: 0,
-      previousScheduledPaid: 0,
+      previousPaid: 0,
       previousSpontaneous: 0,
       previousRemaining: 0,
       previousTotal: 0,
@@ -192,9 +165,8 @@ function buildRows({
     const category = item.category || "Fara categorie";
     const paid = getPaidAmount(item);
     const remaining = getRemainingAmount(item);
-
     const row = ensureRow(category);
-    row.scheduledPaid += paid;
+    row.paid += paid;
     row.remaining += remaining;
     row.total += paid + remaining;
     row.count += 1;
@@ -204,7 +176,6 @@ function buildRows({
   currentExpenses.forEach((expense) => {
     const category = expense.category || "Fara categorie";
     const amount = getExpenseAmount(expense);
-
     const row = ensureRow(category);
     row.spontaneous += amount;
     row.total += amount;
@@ -216,9 +187,8 @@ function buildRows({
     const category = item.category || "Fara categorie";
     const paid = getPaidAmount(item);
     const remaining = getRemainingAmount(item);
-
     const row = ensureRow(category);
-    row.previousScheduledPaid += paid;
+    row.previousPaid += paid;
     row.previousRemaining += remaining;
     row.previousTotal += paid + remaining;
   });
@@ -226,7 +196,6 @@ function buildRows({
   previousExpenses.forEach((expense) => {
     const category = expense.category || "Fara categorie";
     const amount = getExpenseAmount(expense);
-
     const row = ensureRow(category);
     row.previousSpontaneous += amount;
     row.previousTotal += amount;
@@ -244,7 +213,6 @@ function buildDonutGradient(rows: CategoryRow[], total: number) {
   }
 
   let start = 0;
-
   const segments = rows.map((row, index) => {
     const size = (row.total / total) * 360;
     const end = start + size;
@@ -277,89 +245,30 @@ function SummaryCard({
   );
 }
 
-function DashboardSummary({
-  realSpent,
-  totalRemaining,
-  estimatedMonth,
-  previousRealSpent,
-  previousRemaining,
-  previousEstimatedMonth,
-}: {
-  realSpent: number;
-  totalRemaining: number;
-  estimatedMonth: number;
-  previousRealSpent: number;
-  previousRemaining: number;
-  previousEstimatedMonth: number;
-}) {
-  const realSpentChangeClass = getChangeClass(realSpent, previousRealSpent);
-  const estimatedChangeClass = getChangeClass(
-    estimatedMonth,
-    previousEstimatedMonth,
-  );
-
-  return (
-    <div className="pxp-dashboard-summary">
-      <SummaryCard
-        label="Iesiri reale"
-        value={`${formatLei(realSpent)} lei`}
-        helper={getShortChangeLabel(realSpent, previousRealSpent)}
-        tone={
-          realSpentChangeClass === "is-up"
-            ? "up"
-            : realSpentChangeClass === "is-down"
-              ? "down"
-              : "flat"
-        }
-      />
-
-      <SummaryCard
-        label="Ramas de plata"
-        value={`${formatLei(totalRemaining)} lei`}
-        helper={`Luna trecuta: ${formatLei(previousRemaining)} lei`}
-      />
-
-      <SummaryCard
-        label="Estimare luna"
-        value={`${formatLei(estimatedMonth)} lei`}
-        helper={getShortChangeLabel(estimatedMonth, previousEstimatedMonth)}
-        tone={
-          estimatedChangeClass === "is-up"
-            ? "up"
-            : estimatedChangeClass === "is-down"
-              ? "down"
-              : "flat"
-        }
-      />
-    </div>
-  );
-}
-
 function ChartView({
   rows,
   estimatedMonth,
-  scheduledPaid,
-  spontaneousSpent,
-  totalRemaining,
-  realSpent,
-  previousRealSpent,
+  paid,
+  spontaneous,
+  remaining,
+  incomeTotal,
+  estimatedFinalBalance,
 }: {
   rows: CategoryRow[];
   estimatedMonth: number;
-  scheduledPaid: number;
-  spontaneousSpent: number;
-  totalRemaining: number;
-  realSpent: number;
-  previousRealSpent: number;
+  paid: number;
+  spontaneous: number;
+  remaining: number;
+  incomeTotal: number;
+  estimatedFinalBalance: number;
 }) {
   const visibleRows = rows.slice(0, 6);
-  const realSpentChangeClass = getChangeClass(realSpent, previousRealSpent);
 
   return (
     <div className="pxp-dashboard-chart-shell">
       <div className="pxp-dashboard-chart-head">
         <div>
-          <div className="pxp-dashboard-kicker">Categorii</div>
+          <div className="pxp-dashboard-kicker">Cashflow</div>
           <h3 className="pxp-dashboard-subtitle">Distribuire luna</h3>
         </div>
 
@@ -383,18 +292,31 @@ function ChartView({
 
           <div className="pxp-dashboard-chart-mini-cards">
             <div className="pxp-dashboard-chart-mini-card">
+              <span>Venituri</span>
+              <strong>{formatLei(incomeTotal)} lei</strong>
+            </div>
+
+            <div className="pxp-dashboard-chart-mini-card">
               <span>Plati achitate</span>
-              <strong>{formatLei(scheduledPaid)} lei</strong>
+              <strong>{formatLei(paid)} lei</strong>
             </div>
 
             <div className="pxp-dashboard-chart-mini-card">
               <span>Spontan</span>
-              <strong>{formatLei(spontaneousSpent)} lei</strong>
+              <strong>{formatLei(spontaneous)} lei</strong>
             </div>
 
             <div className="pxp-dashboard-chart-mini-card">
               <span>Ramas</span>
-              <strong>{formatLei(totalRemaining)} lei</strong>
+              <strong>{formatLei(remaining)} lei</strong>
+            </div>
+
+            <div className="pxp-dashboard-chart-mini-card">
+              <span>Sold final</span>
+              <strong>
+                {estimatedFinalBalance < 0 ? "-" : ""}
+                {formatLei(estimatedFinalBalance)} lei
+              </strong>
             </div>
           </div>
         </div>
@@ -424,10 +346,6 @@ function ChartView({
               </div>
             );
           })}
-
-          <div className={`pxp-dashboard-chart-change ${realSpentChangeClass}`}>
-            {getChangeLabel(realSpent, previousRealSpent)}
-          </div>
         </div>
       </div>
     </div>
@@ -457,10 +375,8 @@ function ListView({
       <div className="pxp-dashboard-clean-list">
         {rows.map((row, index) => {
           const percent = getPercent(row.total, estimatedMonth);
-          const realSpent = row.scheduledPaid + row.spontaneous;
-          const realPercent = getPercent(realSpent, row.total);
-          const previousRealSpent =
-            row.previousScheduledPaid + row.previousSpontaneous;
+          const realSpent = row.paid + row.spontaneous;
+          const previousRealSpent = row.previousPaid + row.previousSpontaneous;
           const changeClass = getChangeClass(realSpent, previousRealSpent);
           const color = CHART_COLORS[index % CHART_COLORS.length];
 
@@ -478,15 +394,14 @@ function ListView({
                   </div>
                   <div className="pxp-dashboard-clean-meta">
                     {row.payCount} {row.payCount === 1 ? "plata" : "plati"} ·{" "}
-                    {row.expenseCount}{" "}
-                    {row.expenseCount === 1 ? "expense" : "expenses"} ·{" "}
+                    {row.expenseCount} {row.expenseCount === 1 ? "expense" : "expenses"} ·{" "}
                     {percent}% din total
                   </div>
                 </div>
 
                 <div className="pxp-dashboard-clean-value">
                   <strong>{formatLei(row.total)} lei</strong>
-                  <span>{realPercent}% deja iesit</span>
+                  <span>{getPercent(realSpent, row.total)}% deja iesit</span>
                 </div>
               </div>
 
@@ -495,7 +410,7 @@ function ListView({
               </div>
 
               <div className="pxp-dashboard-clean-footer">
-                <span>Plati: {formatLei(row.scheduledPaid)} lei</span>
+                <span>Plati: {formatLei(row.paid)} lei</span>
                 <span>Spontan: {formatLei(row.spontaneous)} lei</span>
                 <span>Ramas: {formatLei(row.remaining)} lei</span>
               </div>
@@ -511,93 +426,17 @@ function ListView({
   );
 }
 
-function buildTopItems({
-  currentItems,
-  currentExpenses,
-}: {
-  currentItems: CalendarItem[];
-  currentExpenses: ExpenseItem[];
-}): DashboardTopItem[] {
-  const payItems: DashboardTopItem[] = currentItems
-    .filter(isMoneyItem)
-    .map((item) => ({
-      id: `pay-${item.id}`,
-      title: item.title,
-      category: item.category || "Fara categorie",
-      amount: getPaidAmount(item) + getRemainingAmount(item),
-      kind: "pay",
-    }));
-
-  const expenseItems: DashboardTopItem[] = currentExpenses.map((expense) => ({
-    id: `expense-${expense.id}`,
-    title: expense.title,
-    category: expense.category || "Fara categorie",
-    amount: getExpenseAmount(expense),
-    kind: "expense",
-  }));
-
-  return [...payItems, ...expenseItems]
-    .filter((item) => item.amount > 0)
-    .sort((a, b) => b.amount - a.amount)
-    .slice(0, 5);
-}
-
-function TopItems({
-  currentItems,
-  currentExpenses,
-}: {
-  currentItems: CalendarItem[];
-  currentExpenses: ExpenseItem[];
-}) {
-  const topItems = buildTopItems({ currentItems, currentExpenses });
-
-  if (topItems.length === 0) return null;
-
-  return (
-    <div className="pxp-dashboard-list-panel">
-      <div className="pxp-dashboard-list-head">
-        <div>
-          <div className="pxp-dashboard-kicker">Top luna</div>
-          <h3 className="pxp-dashboard-subtitle">Cele mai mari iesiri</h3>
-        </div>
-      </div>
-
-      <div className="pxp-dashboard-top-items">
-        {topItems.map((item, index) => {
-          const color = CHART_COLORS[index % CHART_COLORS.length];
-
-          return (
-            <div key={item.id} className="pxp-dashboard-top-item">
-              <div className="pxp-dashboard-top-left">
-                <i style={{ background: color }} />
-                <div>
-                  <strong>{item.title}</strong>
-                  <span>
-                    {item.kind === "pay" ? "Plata" : "Expense"} ·{" "}
-                    {item.category}
-                  </span>
-                </div>
-              </div>
-
-              <b>{formatLei(item.amount)} lei</b>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
 export default function MonthlyDashboard({
   currentItems,
   previousItems,
   currentExpenses,
   previousExpenses,
+  currentIncome,
+  previousIncome,
   viewMode,
 }: Props) {
   const moneyItems = currentItems.filter(isMoneyItem);
   const previousMoneyItems = previousItems.filter(isMoneyItem);
-
   const rows = buildRows({
     currentItems,
     previousItems,
@@ -605,17 +444,14 @@ export default function MonthlyDashboard({
     previousExpenses,
   });
 
-  const scheduledPaid = rows.reduce((sum, row) => sum + row.scheduledPaid, 0);
-  const spontaneousSpent = rows.reduce((sum, row) => sum + row.spontaneous, 0);
-  const totalRemaining = rows.reduce((sum, row) => sum + row.remaining, 0);
-  const realSpent = scheduledPaid + spontaneousSpent;
-  const estimatedMonth = realSpent + totalRemaining;
+  const paid = rows.reduce((sum, row) => sum + row.paid, 0);
+  const spontaneous = rows.reduce((sum, row) => sum + row.spontaneous, 0);
+  const remaining = rows.reduce((sum, row) => sum + row.remaining, 0);
+  const realSpent = paid + spontaneous;
+  const estimatedMonth = realSpent + remaining;
 
-  const previousScheduledPaid = rows.reduce(
-    (sum, row) => sum + row.previousScheduledPaid,
-    0,
-  );
-  const previousSpontaneousSpent = rows.reduce(
+  const previousPaid = rows.reduce((sum, row) => sum + row.previousPaid, 0);
+  const previousSpontaneous = rows.reduce(
     (sum, row) => sum + row.previousSpontaneous,
     0,
   );
@@ -623,12 +459,17 @@ export default function MonthlyDashboard({
     (sum, row) => sum + row.previousRemaining,
     0,
   );
-  const previousRealSpent = previousScheduledPaid + previousSpontaneousSpent;
+  const previousRealSpent = previousPaid + previousSpontaneous;
   const previousEstimatedMonth = previousRealSpent + previousRemaining;
 
-  const entryCount = moneyItems.length + currentExpenses.length;
+  const incomeTotal = sumIncome(currentIncome);
+  const previousIncomeTotal = sumIncome(previousIncome);
+  const availableNow = incomeTotal - realSpent;
+  const estimatedFinalBalance = incomeTotal - estimatedMonth;
+
+  const entryCount = moneyItems.length + currentExpenses.length + currentIncome.length;
   const previousEntryCount =
-    previousMoneyItems.length + previousExpenses.length;
+    previousMoneyItems.length + previousExpenses.length + previousIncome.length;
 
   if (entryCount === 0 && previousEntryCount === 0) {
     return (
@@ -641,8 +482,8 @@ export default function MonthlyDashboard({
         </div>
 
         <div className="pxp-dashboard-empty">
-          Adauga o plata sau o cheltuiala pentru a vedea statistici, categorii
-          si comparatii fata de luna trecuta.
+          Adauga o plata, o cheltuiala sau un venit pentru a vedea statistici,
+          cashflow, categorii si comparatii fata de luna trecuta.
         </div>
       </section>
     );
@@ -654,7 +495,7 @@ export default function MonthlyDashboard({
         <div>
           <div className="pxp-dashboard-kicker">Dashboard lunar</div>
           <h2 className="pxp-dashboard-title">
-            {viewMode === "chart" ? "Grafic financiar" : "Lista financiara"}
+            {viewMode === "chart" ? "Cashflow" : "Lista financiara"}
           </h2>
         </div>
 
@@ -663,33 +504,61 @@ export default function MonthlyDashboard({
         </div>
       </div>
 
-      <DashboardSummary
-        realSpent={realSpent}
-        totalRemaining={totalRemaining}
-        estimatedMonth={estimatedMonth}
-        previousRealSpent={previousRealSpent}
-        previousRemaining={previousRemaining}
-        previousEstimatedMonth={previousEstimatedMonth}
-      />
+      <div className="pxp-dashboard-summary pxp-dashboard-summary-wide">
+        <SummaryCard
+          label="Venituri luna"
+          value={`${formatLei(incomeTotal)} lei`}
+          helper={getShortChangeLabel(incomeTotal, previousIncomeTotal)}
+          tone={getChangeClass(incomeTotal, previousIncomeTotal) === "is-up" ? "down" : "flat"}
+        />
+
+        <SummaryCard
+          label="Cheltuit pana acum"
+          value={`${formatLei(realSpent)} lei`}
+          helper={getShortChangeLabel(realSpent, previousRealSpent)}
+          tone={getChangeClass(realSpent, previousRealSpent) === "is-up" ? "up" : "down"}
+        />
+
+        <SummaryCard
+          label="Disponibil acum"
+          value={`${availableNow < 0 ? "-" : ""}${formatLei(availableNow)} lei`}
+          helper="Venituri - cheltuit pana acum"
+          tone={availableNow < 0 ? "up" : "down"}
+        />
+
+        <SummaryCard
+          label="Ramas de plata"
+          value={`${formatLei(remaining)} lei`}
+          helper={`Luna trecuta: ${formatLei(previousRemaining)} lei`}
+        />
+
+        <SummaryCard
+          label="Estimare cheltuieli"
+          value={`${formatLei(estimatedMonth)} lei`}
+          helper={getShortChangeLabel(estimatedMonth, previousEstimatedMonth)}
+          tone={getChangeClass(estimatedMonth, previousEstimatedMonth) === "is-up" ? "up" : "down"}
+        />
+
+        <SummaryCard
+          label="Sold estimat final"
+          value={`${estimatedFinalBalance < 0 ? "-" : ""}${formatLei(estimatedFinalBalance)} lei`}
+          helper="Venituri - estimare cheltuieli"
+          tone={estimatedFinalBalance < 0 ? "up" : "down"}
+        />
+      </div>
 
       {viewMode === "chart" ? (
         <ChartView
           rows={rows}
           estimatedMonth={estimatedMonth}
-          scheduledPaid={scheduledPaid}
-          spontaneousSpent={spontaneousSpent}
-          totalRemaining={totalRemaining}
-          realSpent={realSpent}
-          previousRealSpent={previousRealSpent}
+          paid={paid}
+          spontaneous={spontaneous}
+          remaining={remaining}
+          incomeTotal={incomeTotal}
+          estimatedFinalBalance={estimatedFinalBalance}
         />
       ) : (
-        <>
-          <ListView rows={rows} estimatedMonth={estimatedMonth} />
-          <TopItems
-            currentItems={moneyItems}
-            currentExpenses={currentExpenses}
-          />
-        </>
+        <ListView rows={rows} estimatedMonth={estimatedMonth} />
       )}
     </section>
   );

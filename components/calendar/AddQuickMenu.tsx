@@ -5,6 +5,7 @@ type Props = {
   onClose: () => void;
   onAddEvent: () => void;
   onAddExpense: () => void;
+  onAddIncome: () => void;
 };
 
 export default function AddQuickMenu({
@@ -12,6 +13,7 @@ export default function AddQuickMenu({
   onClose,
   onAddEvent,
   onAddExpense,
+  onAddIncome,
 }: Props) {
   if (!open) return null;
 
@@ -61,6 +63,19 @@ export default function AddQuickMenu({
             <span className="pxp-mobile-menu-item-text">
               Add expense
               <small>Benzina, mancare, parcare, cumparaturi</small>
+            </span>
+          </button>
+
+          <button
+            type="button"
+            className="pxp-mobile-menu-item"
+            onClick={onAddIncome}
+          >
+            <span className="pxp-mobile-menu-item-icon">💰</span>
+
+            <span className="pxp-mobile-menu-item-text">
+              Add income
+              <small>Salariu, dividende, incasari, rambursari</small>
             </span>
           </button>
         </div>

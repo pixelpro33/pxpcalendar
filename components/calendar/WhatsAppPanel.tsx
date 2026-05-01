@@ -59,6 +59,13 @@ type PreviewData = {
     upcomingPaymentsTotal: number;
     overduePaymentsTotal: number;
     urgentTotal: number;
+    upcomingThreeDayPaymentsTotal?: number;
+    incomeToday?: number;
+    incomeYesterday?: number;
+    incomeMonth?: number;
+    estimatedFinalBalance?: number;
+    spentDayBeforeYesterday?: number;
+    paymentLookaheadDays?: number;
   };
   settings?: WhatsAppSettings;
 };
@@ -66,10 +73,10 @@ type PreviewData = {
 const DEFAULT_SETTINGS: WhatsAppSettings = {
   enabled: true,
   timezone: "Europe/Bucharest",
-  sendAt: "22:00",
+  sendAt: "05:00",
   sendEmptyMessage: false,
 
-  reminderDaysAhead: 2,
+  reminderDaysAhead: 3,
   includeEmptyDays: false,
 
   includeTasks: true,
@@ -93,7 +100,7 @@ const DEFAULT_SETTINGS: WhatsAppSettings = {
 
   birthdayReminderDays: [7, 5, 3, 1],
   messageTitle: "PXP Calendar",
-  tomorrowLabel: "Urmatoarele zile",
+  tomorrowLabel: "Următoarele zile",
   emptyMessage: "Nu ai evenimente programate.",
   testPrefix: "TEST",
 };
@@ -409,7 +416,7 @@ export default function WhatsAppPanel() {
                 max={14}
                 value={settings.reminderDaysAhead}
                 onChange={(event) =>
-                  updateNumber("reminderDaysAhead", event.target.value, 2)
+                  updateNumber("reminderDaysAhead", event.target.value, 3)
                 }
               />
             </div>
