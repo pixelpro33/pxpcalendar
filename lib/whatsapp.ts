@@ -67,6 +67,7 @@ type OccurrenceRow = {
 type ExpenseSummaryRow = {
   spent_today: string | number | null;
   spent_yesterday: string | number | null;
+  spent_day_before_yesterday: string | number | null;
   spent_month: string | number | null;
 };
 
@@ -95,7 +96,7 @@ type DayGroup = {
 export const DEFAULT_WHATSAPP_SETTINGS: WhatsAppSettings = {
   enabled: true,
   timezone: "Europe/Bucharest",
-  sendAt: "22:00",
+  sendAt: "05:00",
   sendEmptyMessage: false,
 
   reminderDaysAhead: 3,
@@ -122,7 +123,7 @@ export const DEFAULT_WHATSAPP_SETTINGS: WhatsAppSettings = {
 
   birthdayReminderDays: [7, 5, 3, 1],
   messageTitle: "PXP Calendar",
-  tomorrowLabel: "Urmatoarele zile",
+  tomorrowLabel: "Următoarele zile",
   emptyMessage: "Nu ai evenimente programate.",
   testPrefix: "TEST",
 };
@@ -143,13 +144,13 @@ const RO_MONTHS = [
 ];
 
 const RO_WEEKDAYS = [
-  "Duminica",
+  "Duminică",
   "Luni",
-  "Marti",
+  "Marți",
   "Miercuri",
   "Joi",
   "Vineri",
-  "Sambata",
+  "Sâmbătă",
 ];
 
 function toNumber(value: unknown) {
@@ -774,7 +775,7 @@ function buildOverdueSection(items: MessageItem[], settings: WhatsAppSettings) {
   if (items.length === 0) return "";
 
   return [
-    "⚠️ Restante",
+    "⚠️ Restanțe",
     ...items.map((item) => formatOverdueLine(item, settings)),
   ].join("\n");
 }
@@ -877,7 +878,7 @@ function buildDaySection(group: DayGroup, settings: WhatsAppSettings) {
   const dayInfo = getMonthDayInfo(group.date);
   const lines = [
     `🗓️ ${formatDateHuman(group.date)}`,
-    `Ziua ${dayInfo.currentDay} / ${dayInfo.totalDays} din luna`,
+    `Ziua ${dayInfo.currentDay} / ${dayInfo.totalDays} din lună`,
   ];
 
   if (group.items.length === 0) {
@@ -889,7 +890,7 @@ function buildDaySection(group: DayGroup, settings: WhatsAppSettings) {
   const { tasks, events, payments, birthdays } = splitByType(sortedItems);
 
   const sections = [
-    buildSection("💳 Plati", payments, settings),
+    buildSection("💳 Plăți", payments, settings),
     buildSection("✅ Taskuri", tasks, settings),
     buildSection("📌 Evenimente", events, settings),
     buildSection("🎂 Birthdays", birthdays, settings),
@@ -954,7 +955,7 @@ function buildBirthdaySection(
   if (items.length === 0) return "";
 
   return [
-    "🎂 Birthdays in curand",
+    "🎂 Zile de naștere în curând",
     ...items.map((item) => formatItemLine(item, settings)),
   ].join("\n");
 }
@@ -986,9 +987,7 @@ async function getExpenseSummary(baseToday: string) {
     [baseToday, yesterday, dayBeforeYesterday, monthStart, monthEnd],
   );
 
-  const row = result.rows[0] as ExpenseSummaryRow & {
-    spent_day_before_yesterday?: string | number | null;
-  };
+  const row = result.rows[0];
 
   return {
     spentToday: toNumber(row?.spent_today) || 0,
@@ -1058,6 +1057,15 @@ export async function buildWhatsAppMessage({
     allDates,
     finalSettings.timezone,
   );
+
+  const upcomingItems = buildItemsForDates({
+    events,
+    occurrences,
+    dates: upcomingDates,
+    timezone: finalSettings.timezone,
+    settings: finalSettings,
+    mode: "upcoming",
+  });
 
   const paymentLookaheadItems = buildItemsForDates({
     events,
