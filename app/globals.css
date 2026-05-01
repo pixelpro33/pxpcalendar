@@ -1180,3 +1180,25 @@ body {
     font-size: 16px;
   }
 }
+
+.pxp-inline-state,
+.pxp-inline-error {
+  width: 100%;
+  margin: 10px 0;
+  border-radius: 14px;
+  padding: 12px 14px;
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.pxp-inline-state {
+  border: 1px solid rgba(96, 165, 250, 0.22);
+  background: rgba(59, 130, 246, 0.1);
+  color: rgba(219, 234, 254, 0.95);
+}
+
+.pxp-inline-error {
+  border: 1px solid rgba(239, 68, 68, 0.28);
+  background: rgba(239, 68, 68, 0.11);
+  color: rgba(254, 202, 202, 0.95);
+}
