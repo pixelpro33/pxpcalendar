@@ -746,3 +746,223 @@
 .calendar-list-row.is-today .calendar-list-day {
   color: #bfdbfe;
 }
+
+/* Final fix: aligned compact list + clean stats */
+
+/* Stats: doua carduri curate, fara chenar extra vizibil */
+.pxp-stats {
+  position: relative !important;
+  top: auto !important;
+  z-index: 5 !important;
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+  margin: 8px 0 10px !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
+.pxp-stat-card {
+  min-height: 48px !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 10px !important;
+  border: 0 !important;
+  border-radius: 12px !important;
+  background: rgba(255, 255, 255, 0.055) !important;
+  box-shadow: none !important;
+  padding: 8px 10px !important;
+  overflow: hidden !important;
+}
+
+.pxp-stat-main {
+  min-width: 0 !important;
+}
+
+.pxp-stat-main strong {
+  display: block !important;
+  color: white !important;
+  font-size: 18px !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  letter-spacing: -0.04em !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.pxp-stat-side {
+  min-width: 34px !important;
+  display: grid !important;
+  justify-items: center !important;
+  gap: 2px !important;
+}
+
+.pxp-stat-side span {
+  font-size: 13px !important;
+  line-height: 1 !important;
+}
+
+.pxp-stat-side small {
+  color: rgba(255, 255, 255, 0.5) !important;
+  font-size: 7px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.07em !important;
+  text-transform: uppercase !important;
+  line-height: 1 !important;
+}
+
+/* List view: aliniere perfecta data + eveniment */
+.calendar-list {
+  display: grid !important;
+  gap: 6px !important;
+  padding: 4px 0 72px !important;
+}
+
+.calendar-list-row {
+  display: grid !important;
+  grid-template-columns: 42px minmax(0, 1fr) !important;
+  gap: 8px !important;
+  align-items: stretch !important;
+  min-height: 36px !important;
+}
+
+.calendar-list-date {
+  min-height: 36px !important;
+  height: 36px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  text-align: center !important;
+  align-self: start !important;
+}
+
+.calendar-list-weekday {
+  display: block !important;
+  margin: 0 0 2px !important;
+  color: rgba(255, 255, 255, 0.5) !important;
+  font-size: 8px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.06em !important;
+  line-height: 1 !important;
+  text-transform: uppercase !important;
+}
+
+.calendar-list-day {
+  display: block !important;
+  color: rgba(255, 255, 255, 0.92) !important;
+  font-size: 20px !important;
+  font-weight: 800 !important;
+  line-height: 1 !important;
+}
+
+.calendar-list-events {
+  display: grid !important;
+  gap: 5px !important;
+  min-width: 0 !important;
+  align-self: start !important;
+}
+
+.calendar-list-empty {
+  min-height: 36px !important;
+  height: 36px !important;
+  display: flex !important;
+  align-items: center !important;
+  border-radius: 8px !important;
+  padding: 0 10px !important;
+  font-size: 11px !important;
+  font-weight: 750 !important;
+}
+
+.event-chip-list {
+  min-height: 36px !important;
+  height: 36px !important;
+  border-radius: 8px !important;
+  padding: 0 10px !important;
+  gap: 6px !important;
+  font-size: 13px !important;
+  font-weight: 750 !important;
+  line-height: 1 !important;
+}
+
+.event-chip-list .event-chip-icon {
+  font-size: 11px !important;
+}
+
+.event-chip-list .event-chip-title {
+  font-size: 13px !important;
+  font-weight: 750 !important;
+  line-height: 1 !important;
+}
+
+/* Today in list: nu schimba inaltimea, doar contur interior */
+.calendar-list-row.is-today .calendar-list-date {
+  height: 36px !important;
+  min-height: 36px !important;
+  border: 1px solid rgba(59, 130, 246, 0.55) !important;
+  border-radius: 10px !important;
+  background: rgba(59, 130, 246, 0.06) !important;
+  padding: 0 !important;
+}
+
+.calendar-list-row.is-today .calendar-list-weekday,
+.calendar-list-row.is-today .calendar-list-day {
+  color: #bfdbfe !important;
+}
+
+/* Cand sunt mai multe evenimente, randul creste natural, dar data ramane sus perfect aliniata */
+.calendar-list-row:has(.event-chip-list + .event-chip-list) {
+  min-height: auto !important;
+}
+
+@media (max-width: 420px) {
+  .pxp-stats {
+    gap: 8px !important;
+  }
+
+  .pxp-stat-card {
+    min-height: 46px !important;
+    padding: 8px !important;
+  }
+
+  .pxp-stat-main strong {
+    font-size: 17px !important;
+  }
+
+  .calendar-list-row {
+    grid-template-columns: 38px minmax(0, 1fr) !important;
+    gap: 7px !important;
+    min-height: 34px !important;
+  }
+
+  .calendar-list-date,
+  .calendar-list-row.is-today .calendar-list-date {
+    height: 34px !important;
+    min-height: 34px !important;
+  }
+
+  .calendar-list-weekday {
+    font-size: 8px !important;
+  }
+
+  .calendar-list-day {
+    font-size: 19px !important;
+  }
+
+  .calendar-list-empty,
+  .event-chip-list {
+    min-height: 34px !important;
+    height: 34px !important;
+  }
+
+  .event-chip-list,
+  .event-chip-list .event-chip-title {
+    font-size: 12px !important;
+  }
+}
