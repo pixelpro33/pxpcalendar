@@ -60,6 +60,7 @@ type PreviewData = {
     overduePaymentsTotal: number;
     urgentTotal: number;
   };
+  settings?: WhatsAppSettings;
 };
 
 const DEFAULT_SETTINGS: WhatsAppSettings = {
@@ -96,6 +97,27 @@ const DEFAULT_SETTINGS: WhatsAppSettings = {
   emptyMessage: "Nu ai evenimente programate.",
   testPrefix: "TEST",
 };
+
+function mergeSettings(payload: unknown): WhatsAppSettings {
+  if (!payload || typeof payload !== "object") {
+    return DEFAULT_SETTINGS;
+  }
+
+  const data = payload as {
+    settings?: Partial<WhatsAppSettings>;
+  } & Partial<WhatsAppSettings>;
+
+  const source =
+    data.settings && typeof data.settings === "object" ? data.settings : data;
+
+  return {
+    ...DEFAULT_SETTINGS,
+    ...source,
+    birthdayReminderDays: Array.isArray(source.birthdayReminderDays)
+      ? source.birthdayReminderDays
+      : DEFAULT_SETTINGS.birthdayReminderDays,
+  };
+}
 
 function ToggleRow({
   label,
@@ -157,7 +179,7 @@ export default function WhatsAppPanel() {
         }
 
         if (!cancelled) {
-          setSettings({ ...DEFAULT_SETTINGS, ...data });
+          setSettings(mergeSettings(data));
         }
       } catch (loadError) {
         if (!cancelled) {
@@ -191,6 +213,19 @@ export default function WhatsAppPanel() {
     }));
   }
 
+  function updateNumber<K extends keyof WhatsAppSettings>(
+    key: K,
+    value: string,
+    fallback: number,
+  ) {
+    const parsed = Number(value);
+
+    update(
+      key,
+      (Number.isFinite(parsed) ? parsed : fallback) as WhatsAppSettings[K],
+    );
+  }
+
   function updateBirthdayDays(value: string) {
     const days = value
       .split(",")
@@ -220,7 +255,7 @@ export default function WhatsAppPanel() {
         throw new Error(data?.message || "Nu am putut salva setarile.");
       }
 
-      setSettings(data.settings);
+      setSettings(mergeSettings(data));
       setSuccess("Setarile WhatsApp au fost salvate.");
     } catch (saveError) {
       setError(
@@ -254,6 +289,10 @@ export default function WhatsAppPanel() {
 
       if (!response.ok) {
         throw new Error(data?.message || "Nu am putut genera preview.");
+      }
+
+      if (data.settings) {
+        setSettings(mergeSettings(data));
       }
 
       setPreview(data);
@@ -290,6 +329,10 @@ export default function WhatsAppPanel() {
 
       if (!response.ok) {
         throw new Error(data?.message || "Nu am putut trimite testul.");
+      }
+
+      if (data.settings) {
+        setSettings(mergeSettings(data));
       }
 
       setPreview(data);
@@ -332,28 +375,28 @@ export default function WhatsAppPanel() {
             <ToggleRow
               label="WhatsApp activ"
               description="Daca este dezactivat, cron-ul nu trimite mesaje."
-              checked={settings.enabled}
+              checked={Boolean(settings.enabled)}
               onChange={(value) => update("enabled", value)}
             />
 
             <ToggleRow
               label="Trimite mesaj gol"
               description="Trimite mesaj chiar daca nu exista nimic programat."
-              checked={settings.sendEmptyMessage}
+              checked={Boolean(settings.sendEmptyMessage)}
               onChange={(value) => update("sendEmptyMessage", value)}
             />
 
             <ToggleRow
               label="Doar pending"
               description="Exclude lucrurile deja completate."
-              checked={settings.includeOnlyPending}
+              checked={Boolean(settings.includeOnlyPending)}
               onChange={(value) => update("includeOnlyPending", value)}
             />
 
             <ToggleRow
               label="Zile goale"
               description="Afiseaza si zile fara evenimente in perioada aleasa."
-              checked={settings.includeEmptyDays}
+              checked={Boolean(settings.includeEmptyDays)}
               onChange={(value) => update("includeEmptyDays", value)}
             />
 
@@ -366,7 +409,7 @@ export default function WhatsAppPanel() {
                 max={14}
                 value={settings.reminderDaysAhead}
                 onChange={(event) =>
-                  update("reminderDaysAhead", Number(event.target.value || 1))
+                  updateNumber("reminderDaysAhead", event.target.value, 2)
                 }
               />
             </div>
@@ -402,56 +445,56 @@ export default function WhatsAppPanel() {
             <ToggleRow
               label="Taskuri"
               description="Include taskurile."
-              checked={settings.includeTasks}
+              checked={Boolean(settings.includeTasks)}
               onChange={(value) => update("includeTasks", value)}
             />
 
             <ToggleRow
               label="Evenimente"
               description="Include evenimentele."
-              checked={settings.includeEvents}
+              checked={Boolean(settings.includeEvents)}
               onChange={(value) => update("includeEvents", value)}
             />
 
             <ToggleRow
               label="Plati"
               description="Include platile si sumele."
-              checked={settings.includePayments}
+              checked={Boolean(settings.includePayments)}
               onChange={(value) => update("includePayments", value)}
             />
 
             <ToggleRow
               label="Birthdays"
               description="Include reminder pentru zile de nastere."
-              checked={settings.includeBirthdays}
+              checked={Boolean(settings.includeBirthdays)}
               onChange={(value) => update("includeBirthdays", value)}
             />
 
             <ToggleRow
               label="Locatie"
               description="Include adresa sau link-ul de locatie."
-              checked={settings.includeLocation}
+              checked={Boolean(settings.includeLocation)}
               onChange={(value) => update("includeLocation", value)}
             />
 
             <ToggleRow
               label="Sume"
               description="Include valoarea in lei."
-              checked={settings.includeAmounts}
+              checked={Boolean(settings.includeAmounts)}
               onChange={(value) => update("includeAmounts", value)}
             />
 
             <ToggleRow
               label="Rezumat luna"
               description="Include platit, ramas luna si total urgent."
-              checked={settings.includeMonthlySummary}
+              checked={Boolean(settings.includeMonthlySummary)}
               onChange={(value) => update("includeMonthlySummary", value)}
             />
 
             <ToggleRow
               label="Platile primele"
               description="Pune platile inaintea taskurilor si evenimentelor."
-              checked={settings.priorityPaymentsFirst}
+              checked={Boolean(settings.priorityPaymentsFirst)}
               onChange={(value) => update("priorityPaymentsFirst", value)}
             />
           </div>
@@ -467,28 +510,28 @@ export default function WhatsAppPanel() {
             <ToggleRow
               label="Include restante"
               description="Afiseaza plati/taskuri vechi ramase pending."
-              checked={settings.includeOverdue}
+              checked={Boolean(settings.includeOverdue)}
               onChange={(value) => update("includeOverdue", value)}
             />
 
             <ToggleRow
               label="Plati restante"
               description="Include platile trecute necompletate."
-              checked={settings.includeOverduePayments}
+              checked={Boolean(settings.includeOverduePayments)}
               onChange={(value) => update("includeOverduePayments", value)}
             />
 
             <ToggleRow
               label="Taskuri restante"
               description="Include taskurile trecute necompletate."
-              checked={settings.includeOverdueTasks}
+              checked={Boolean(settings.includeOverdueTasks)}
               onChange={(value) => update("includeOverdueTasks", value)}
             />
 
             <ToggleRow
               label="Evenimente restante"
               description="Include evenimente trecute necompletate."
-              checked={settings.includeOverdueEvents}
+              checked={Boolean(settings.includeOverdueEvents)}
               onChange={(value) => update("includeOverdueEvents", value)}
             />
 
@@ -503,10 +546,7 @@ export default function WhatsAppPanel() {
                 max={365}
                 value={settings.overdueLookbackDays}
                 onChange={(event) =>
-                  update(
-                    "overdueLookbackDays",
-                    Number(event.target.value || 45),
-                  )
+                  updateNumber("overdueLookbackDays", event.target.value, 45)
                 }
               />
             </div>
@@ -520,7 +560,7 @@ export default function WhatsAppPanel() {
                 max={50}
                 value={settings.maxOverdueItems}
                 onChange={(event) =>
-                  update("maxOverdueItems", Number(event.target.value || 10))
+                  updateNumber("maxOverdueItems", event.target.value, 10)
                 }
               />
             </div>
