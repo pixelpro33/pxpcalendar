@@ -10,6 +10,7 @@ import CalendarStats from "@/components/calendar/CalendarStats";
 import ColorPickerModal from "@/components/calendar/ColorPickerModal";
 import EventDetailsModal from "@/components/calendar/EventDetailsModal";
 import RepeatModal from "@/components/calendar/RepeatModal";
+import MonthlyDashboard from "@/components/calendar/MonthlyDashboard";
 import {
   buildDraft,
   buildGroupedByDay,
@@ -643,6 +644,8 @@ export default function HomeClient({ version }: Props) {
         />
 
         <CalendarStats paid={totals.paid} remaining={totals.remaining} />
+
+        <MonthlyDashboard items={monthItems} />
 
         <CalendarFilters
           filters={filters}

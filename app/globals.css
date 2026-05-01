@@ -1202,3 +1202,167 @@ body {
   background: rgba(239, 68, 68, 0.11);
   color: rgba(254, 202, 202, 0.95);
 }
+
+.pxp-dashboard {
+  width: 100%;
+  margin: 10px 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.045);
+  box-shadow: 0 14px 38px rgba(0, 0, 0, 0.16);
+  padding: 13px;
+  overflow: hidden;
+}
+
+.pxp-dashboard-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.pxp-dashboard-kicker {
+  margin-bottom: 4px;
+  color: var(--muted-soft);
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.pxp-dashboard-title {
+  margin: 0;
+  color: white;
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: -0.035em;
+  line-height: 1;
+}
+
+.pxp-dashboard-count {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.055);
+  color: rgba(255, 255, 255, 0.72);
+  padding: 7px 10px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.pxp-dashboard-summary {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.pxp-dashboard-card {
+  min-width: 0;
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.045);
+  padding: 11px 12px;
+}
+
+.pxp-dashboard-card span {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--muted-soft);
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.pxp-dashboard-card strong {
+  display: block;
+  color: white;
+  font-size: 21px;
+  font-weight: 900;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pxp-category-list {
+  display: grid;
+  gap: 9px;
+}
+
+.pxp-category-row {
+  min-width: 0;
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  border-radius: 17px;
+  background: rgba(255, 255, 255, 0.035);
+  padding: 11px;
+}
+
+.pxp-category-top,
+.pxp-category-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.pxp-category-name {
+  color: white;
+  font-size: 14px;
+  font-weight: 850;
+}
+
+.pxp-category-meta {
+  margin-top: 3px;
+  color: var(--muted-soft);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.pxp-category-total {
+  flex: 0 0 auto;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.pxp-category-bar {
+  width: 100%;
+  height: 7px;
+  margin: 10px 0 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.075);
+  overflow: hidden;
+}
+
+.pxp-category-bar span {
+  display: block;
+  height: 100%;
+  min-width: 4px;
+  border-radius: inherit;
+  background: rgba(59, 130, 246, 0.88);
+}
+
+.pxp-category-bottom {
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.pxp-dashboard-empty {
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.035);
+  color: rgba(255, 255, 255, 0.52);
+  padding: 13px;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+@media (min-width: 720px) {
+  .pxp-dashboard-summary {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
