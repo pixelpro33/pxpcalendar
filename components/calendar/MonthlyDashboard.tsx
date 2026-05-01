@@ -1,9 +1,6 @@
-"use client";
-
-import { useMemo, useState } from "react";
 import { CalendarItem } from "./types";
 
-type DashboardViewMode = "cards" | "list";
+export type DashboardViewMode = "chart" | "list";
 
 type CategoryRow = {
   category: string;
@@ -19,7 +16,21 @@ type CategoryRow = {
 type Props = {
   currentItems: CalendarItem[];
   previousItems: CalendarItem[];
+  viewMode: DashboardViewMode;
 };
+
+const CHART_COLORS = [
+  "#3b82f6",
+  "#10b981",
+  "#a855f7",
+  "#f59e0b",
+  "#ef4444",
+  "#06b6d4",
+  "#ec4899",
+  "#84cc16",
+  "#f97316",
+  "#64748b",
+];
 
 function isMoneyItem(item: CalendarItem) {
   return item.type === "pay" || typeof item.amount === "number";
@@ -157,6 +168,25 @@ function buildRows(
   });
 }
 
+function buildDonutGradient(rows: CategoryRow[], total: number) {
+  if (total <= 0 || rows.length === 0) {
+    return "conic-gradient(rgba(255,255,255,0.08) 0deg 360deg)";
+  }
+
+  let start = 0;
+
+  const segments = rows.map((row, index) => {
+    const size = (row.total / total) * 360;
+    const end = start + size;
+    const color = CHART_COLORS[index % CHART_COLORS.length];
+    const segment = `${color} ${start}deg ${end}deg`;
+    start = end;
+    return segment;
+  });
+
+  return `conic-gradient(${segments.join(", ")})`;
+}
+
 function SummaryCard({
   label,
   value,
@@ -177,19 +207,70 @@ function SummaryCard({
   );
 }
 
+function DonutBlock({
+  rows,
+  totalMonth,
+  totalPaid,
+  totalRemaining,
+}: {
+  rows: CategoryRow[];
+  totalMonth: number;
+  totalPaid: number;
+  totalRemaining: number;
+}) {
+  return (
+    <div className="pxp-dashboard-chart-panel">
+      <div
+        className="pxp-dashboard-donut"
+        style={{ background: buildDonutGradient(rows, totalMonth) }}
+      >
+        <div className="pxp-dashboard-donut-inner">
+          <span>Total</span>
+          <strong>{formatLei(totalMonth)}</strong>
+          <small>lei</small>
+        </div>
+      </div>
+
+      <div className="pxp-dashboard-chart-side">
+        <div className="pxp-dashboard-chart-mini">
+          <div>
+            <span>Platit</span>
+            <strong>{formatLei(totalPaid)} lei</strong>
+          </div>
+
+          <div>
+            <span>Ramas</span>
+            <strong>{formatLei(totalRemaining)} lei</strong>
+          </div>
+        </div>
+
+        <div className="pxp-dashboard-chart-legend">
+          {rows.map((row, index) => {
+            const percent = getPercent(row.total, totalMonth);
+            const color = CHART_COLORS[index % CHART_COLORS.length];
+
+            return (
+              <div key={row.category} className="pxp-chart-legend-row">
+                <i style={{ background: color }} />
+                <span>{row.category}</span>
+                <b>{percent}%</b>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function MonthlyDashboard({
   currentItems,
   previousItems,
+  viewMode,
 }: Props) {
-  const [viewMode, setViewMode] = useState<DashboardViewMode>("cards");
-
   const moneyItems = currentItems.filter(isMoneyItem);
   const previousMoneyItems = previousItems.filter(isMoneyItem);
-
-  const rows = useMemo(
-    () => buildRows(currentItems, previousItems),
-    [currentItems, previousItems],
-  );
+  const rows = buildRows(currentItems, previousItems);
 
   const totalPaid = rows.reduce((sum, row) => sum + row.paid, 0);
   const totalRemaining = rows.reduce((sum, row) => sum + row.remaining, 0);
@@ -295,32 +376,27 @@ export default function MonthlyDashboard({
         </div>
       </div>
 
+      <DonutBlock
+        rows={rows}
+        totalMonth={totalMonth}
+        totalPaid={totalPaid}
+        totalRemaining={totalRemaining}
+      />
+
       <div className="pxp-dashboard-view-row">
         <div>
-          <div className="pxp-dashboard-kicker">Categorii</div>
-          <h3 className="pxp-dashboard-subtitle">Distribuire cheltuieli</h3>
-        </div>
-
-        <div className="pxp-dashboard-view-switch">
-          <button
-            type="button"
-            className={viewMode === "cards" ? "is-active" : ""}
-            onClick={() => setViewMode("cards")}
-          >
-            Carduri
-          </button>
-
-          <button
-            type="button"
-            className={viewMode === "list" ? "is-active" : ""}
-            onClick={() => setViewMode("list")}
-          >
-            Lista
-          </button>
+          <div className="pxp-dashboard-kicker">
+            {viewMode === "chart" ? "Categorii" : "Lista categorii"}
+          </div>
+          <h3 className="pxp-dashboard-subtitle">
+            {viewMode === "chart"
+              ? "Carduri cu procente"
+              : "Distribuire cheltuieli"}
+          </h3>
         </div>
       </div>
 
-      {viewMode === "cards" ? (
+      {viewMode === "chart" ? (
         <div className="pxp-dashboard-category-cards">
           {rows.map((row) => {
             const percent = getPercent(row.total, totalMonth);

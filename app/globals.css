@@ -2341,3 +2341,44 @@ input[type="time"] {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+.pxp-dashboard-chart-side {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.pxp-dashboard-chart-mini {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.pxp-dashboard-chart-mini > div {
+  min-width: 0;
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.035);
+  padding: 10px;
+}
+
+.pxp-dashboard-chart-mini span {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--muted-soft);
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.pxp-dashboard-chart-mini strong {
+  display: block;
+  color: white;
+  font-size: 15px;
+  font-weight: 950;
+  line-height: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

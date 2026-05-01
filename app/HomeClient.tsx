@@ -9,7 +9,9 @@ import CalendarHeader from "@/components/calendar/CalendarHeader";
 import CalendarList from "@/components/calendar/CalendarList";
 import CalendarStats from "@/components/calendar/CalendarStats";
 import ColorPickerModal from "@/components/calendar/ColorPickerModal";
-import MonthlyDashboard from "@/components/calendar/MonthlyDashboard";
+import MonthlyDashboard, {
+  DashboardViewMode,
+} from "@/components/calendar/MonthlyDashboard";
 import RepeatModal from "@/components/calendar/RepeatModal";
 import SettingsPanel, {
   PaymentCategory,
@@ -238,7 +240,11 @@ export default function HomeClient({ version }: Props) {
 
   const [selectedYear, setSelectedYear] = useState(today.getFullYear());
   const [selectedMonth, setSelectedMonth] = useState(today.getMonth());
+
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
+  const [dashboardViewMode, setDashboardViewMode] =
+    useState<DashboardViewMode>("chart");
+
   const [items, setItems] = useState<CalendarItem[]>([]);
   const [selectedItem, setSelectedItem] = useState<CalendarItem | null>(null);
 
@@ -845,6 +851,8 @@ export default function HomeClient({ version }: Props) {
           setSelectedMonth={setSelectedMonth}
           viewMode={viewMode}
           setViewMode={setViewMode}
+          dashboardViewMode={dashboardViewMode}
+          setDashboardViewMode={setDashboardViewMode}
           years={years}
           activeSection={activeSection}
           setActiveSection={setActiveSection}
@@ -901,6 +909,7 @@ export default function HomeClient({ version }: Props) {
           <MonthlyDashboard
             currentItems={dashboardMonthItems}
             previousItems={previousDashboardItems}
+            viewMode={dashboardViewMode}
           />
         )}
 
