@@ -1,4 +1,4 @@
-import { PAYMENT_CATEGORIES, TYPE_CONFIG } from "./mockData";
+import { TYPE_CONFIG } from "./mockData";
 import { DraftEvent, EventType } from "./types";
 import { shouldShowAmount } from "./utils";
 
@@ -10,6 +10,7 @@ export default function AddEventDrawer({
   onSave,
   onOpenRepeat,
   onOpenColor,
+  categories,
   mode = "add",
 }: {
   open: boolean;
@@ -19,12 +20,18 @@ export default function AddEventDrawer({
   onSave: () => void;
   onOpenRepeat: () => void;
   onOpenColor: () => void;
+  categories: string[];
   mode?: "add" | "edit";
 }) {
   if (!open) return null;
 
   const titlePlaceholder = mode === "edit" ? "Edit title" : "Add title";
   const saveLabel = mode === "edit" ? "Update" : "Save";
+
+  const categoryOptions =
+    draft.category && !categories.includes(draft.category)
+      ? [draft.category, ...categories]
+      : categories;
 
   return (
     <div className="pxp-overlay" onClick={onClose}>
@@ -206,7 +213,7 @@ export default function AddEventDrawer({
                 >
                   <option value="">Fara categorie</option>
 
-                  {PAYMENT_CATEGORIES.map((category) => (
+                  {categoryOptions.map((category) => (
                     <option key={category} value={category}>
                       {category}
                     </option>

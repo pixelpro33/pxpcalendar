@@ -12,7 +12,9 @@ import ColorPickerModal from "@/components/calendar/ColorPickerModal";
 import EventDetailsModal from "@/components/calendar/EventDetailsModal";
 import MonthlyDashboard from "@/components/calendar/MonthlyDashboard";
 import RepeatModal from "@/components/calendar/RepeatModal";
-import SettingsPanel from "@/components/calendar/SettingsPanel";
+import SettingsPanel, {
+  PaymentCategory,
+} from "@/components/calendar/SettingsPanel";
 import {
   buildDraft,
   buildGroupedByDay,
@@ -79,6 +81,14 @@ function toOptionalNumber(value: number | string | null | undefined) {
 
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+function sortCategories(categories: PaymentCategory[]) {
+  return [...categories].sort((a, b) => {
+    if (a.is_active !== b.is_active) return a.is_active ? -1 : 1;
+    if (a.sort_order !== b.sort_order) return a.sort_order - b.sort_order;
+    return a.name.localeCompare(b.name);
+  });
 }
 
 function toLocalCalendarItem(row: DbEvent): CalendarItem {
@@ -217,6 +227,9 @@ export default function HomeClient({ version }: Props) {
   const [items, setItems] = useState<CalendarItem[]>([]);
   const [selectedItem, setSelectedItem] = useState<CalendarItem | null>(null);
 
+  const [categories, setCategories] = useState<PaymentCategory[]>([]);
+  const [categoriesError, setCategoriesError] = useState("");
+
   const [isLoadingEvents, setIsLoadingEvents] = useState(true);
   const [eventsError, setEventsError] = useState("");
 
@@ -280,12 +293,54 @@ export default function HomeClient({ version }: Props) {
       }
     }
 
+    async function loadCategories() {
+      try {
+        setCategoriesError("");
+
+        const response = await fetch("/api/categories", {
+          method: "GET",
+          cache: "no-store",
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data?.message || "Nu am putut incarca categoriile.");
+        }
+
+        if (!Array.isArray(data)) {
+          throw new Error("Raspuns invalid pentru categorii.");
+        }
+
+        if (!cancelled) {
+          setCategories(sortCategories(data));
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setCategoriesError(
+            error instanceof Error
+              ? error.message
+              : "Nu am putut incarca categoriile.",
+          );
+        }
+      }
+    }
+
     loadEvents();
+    loadCategories();
 
     return () => {
       cancelled = true;
     };
   }, []);
+
+  const activeCategoryNames = useMemo(
+    () =>
+      categories
+        .filter((category) => category.is_active)
+        .map((category) => category.name),
+    [categories],
+  );
 
   const daysInMonth = useMemo(
     () => getDaysInMonth(selectedYear, selectedMonth),
@@ -314,6 +369,78 @@ export default function HomeClient({ version }: Props) {
   );
 
   const totals = useMemo(() => getMonthPayTotals(monthItems), [monthItems]);
+
+  async function createCategory(name: string) {
+    const response = await fetch("/api/categories", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ name }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data?.message || "Nu am putut crea categoria.");
+    }
+
+    if (data?.category) {
+      setCategories((prev) => sortCategories([...prev, data.category]));
+    }
+  }
+
+  async function renameCategory(id: string, name: string) {
+    const response = await fetch("/api/categories", {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ id, name }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data?.message || "Nu am putut redenumi categoria.");
+    }
+
+    if (data?.category) {
+      setCategories((prev) =>
+        sortCategories(
+          prev.map((category) =>
+            category.id === id ? data.category : category,
+          ),
+        ),
+      );
+    }
+  }
+
+  async function toggleCategory(id: string, isActive: boolean) {
+    const response = await fetch("/api/categories", {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ id, isActive }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data?.message || "Nu am putut modifica categoria.");
+    }
+
+    if (data?.category) {
+      setCategories((prev) =>
+        sortCategories(
+          prev.map((category) =>
+            category.id === id ? data.category : category,
+          ),
+        ),
+      );
+    }
+  }
 
   function toggleFilter(type: EventType) {
     setFilters((prev) => ({
@@ -660,6 +787,9 @@ export default function HomeClient({ version }: Props) {
         )}
 
         {eventsError && <div className="pxp-inline-error">{eventsError}</div>}
+        {categoriesError && (
+          <div className="pxp-inline-error">{categoriesError}</div>
+        )}
 
         {activeSection === "calendar" && (
           <>
@@ -697,7 +827,14 @@ export default function HomeClient({ version }: Props) {
           <MonthlyDashboard items={monthItems} />
         )}
 
-        {activeSection === "settings" && <SettingsPanel />}
+        {activeSection === "settings" && (
+          <SettingsPanel
+            categories={categories}
+            onCreateCategory={createCategory}
+            onRenameCategory={renameCategory}
+            onToggleCategory={toggleCategory}
+          />
+        )}
       </div>
 
       {activeSection === "calendar" && (
@@ -722,6 +859,7 @@ export default function HomeClient({ version }: Props) {
         onSave={saveDraftItem}
         onOpenRepeat={() => setShowRepeatModal(true)}
         onOpenColor={() => setShowColorModal(true)}
+        categories={activeCategoryNames}
         mode={editingItemId ? "edit" : "add"}
       />
 

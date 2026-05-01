@@ -1715,3 +1715,89 @@ body {
     display: none;
   }
 }
+
+.pxp-settings-category-create {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.pxp-settings-category-meta {
+  margin-top: 12px;
+  color: rgba(255, 255, 255, 0.52);
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.pxp-settings-category-row.is-disabled {
+  opacity: 0.52;
+}
+
+.pxp-settings-category-main {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.pxp-settings-row-actions {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.pxp-settings-button {
+  min-height: 36px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  color: white;
+  cursor: pointer;
+  padding: 8px 10px;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.pxp-settings-button.primary {
+  border-color: rgba(96, 165, 250, 0.42);
+  background: rgba(37, 99, 235, 0.82);
+}
+
+.pxp-settings-button.danger {
+  border-color: rgba(239, 68, 68, 0.34);
+  background: rgba(239, 68, 68, 0.14);
+  color: rgba(254, 202, 202, 0.95);
+}
+
+.pxp-settings-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.pxp-settings-edit-row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 7px;
+}
+
+@media (max-width: 560px) {
+  .pxp-settings-category-create,
+  .pxp-settings-edit-row {
+    grid-template-columns: 1fr;
+  }
+
+  .pxp-settings-category-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .pxp-settings-row-actions {
+    width: 100%;
+  }
+
+  .pxp-settings-row-actions .pxp-settings-button {
+    flex: 1;
+  }
+}
