@@ -1114,15 +1114,17 @@ export default function HomeClient({ version }: Props) {
         )}
 
         {activeSection === "dashboard" && (
-          <>
-            <MonthlyDashboard
-              currentItems={dashboardMonthItems}
-              previousItems={previousDashboardItems}
-              currentExpenses={expenses}
-              previousExpenses={previousExpenses}
-              viewMode={dashboardViewMode}
-            />
+          <MonthlyDashboard
+            currentItems={dashboardMonthItems}
+            previousItems={previousDashboardItems}
+            currentExpenses={expenses}
+            previousExpenses={previousExpenses}
+            viewMode={dashboardViewMode}
+          />
+        )}
 
+        {activeSection === "expenses" && (
+          <>
             {isLoadingExpenses && (
               <div className="pxp-inline-state">Se incarca cheltuielile...</div>
             )}

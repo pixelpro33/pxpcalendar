@@ -2,7 +2,12 @@
 
 import { useEffect, useState } from "react";
 
-export type AppSection = "calendar" | "dashboard" | "categories" | "whatsapp";
+export type AppSection =
+  | "calendar"
+  | "dashboard"
+  | "expenses"
+  | "categories"
+  | "whatsapp";
 
 type Props = {
   activeSection: AppSection;
@@ -17,6 +22,7 @@ const ITEMS: Array<{
 }> = [
   { id: "calendar", label: "Calendar", icon: "📅" },
   { id: "dashboard", label: "Dashboard", icon: "📊" },
+  { id: "expenses", label: "Expenses", icon: "💸" },
   { id: "categories", label: "Categories", icon: "🏷️" },
   { id: "whatsapp", label: "WhatsApp", icon: "💬" },
 ];

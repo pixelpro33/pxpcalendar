@@ -98,7 +98,7 @@ export const DEFAULT_WHATSAPP_SETTINGS: WhatsAppSettings = {
   sendAt: "22:00",
   sendEmptyMessage: false,
 
-  reminderDaysAhead: 2,
+  reminderDaysAhead: 3,
   includeEmptyDays: false,
 
   includeTasks: true,
@@ -969,26 +969,31 @@ async function getExpenseSummary(baseToday: string) {
   const monthStart = getMonthStart(baseToday);
   const monthEnd = getMonthEnd(baseToday);
   const yesterday = addDays(baseToday, -1);
+  const dayBeforeYesterday = addDays(baseToday, -2);
 
   const result = await db.query<ExpenseSummaryRow>(
     `
       SELECT
         COALESCE(SUM(amount) FILTER (WHERE expense_date = $1::date), 0) AS spent_today,
         COALESCE(SUM(amount) FILTER (WHERE expense_date = $2::date), 0) AS spent_yesterday,
+        COALESCE(SUM(amount) FILTER (WHERE expense_date = $3::date), 0) AS spent_day_before_yesterday,
         COALESCE(SUM(amount) FILTER (
-          WHERE expense_date >= $3::date
-            AND expense_date <= $4::date
+          WHERE expense_date >= $4::date
+            AND expense_date <= $5::date
         ), 0) AS spent_month
       FROM expenses
     `,
-    [baseToday, yesterday, monthStart, monthEnd],
+    [baseToday, yesterday, dayBeforeYesterday, monthStart, monthEnd],
   );
 
-  const row = result.rows[0];
+  const row = result.rows[0] as ExpenseSummaryRow & {
+    spent_day_before_yesterday?: string | number | null;
+  };
 
   return {
     spentToday: toNumber(row?.spent_today) || 0,
     spentYesterday: toNumber(row?.spent_yesterday) || 0,
+    spentDayBeforeYesterday: toNumber(row?.spent_day_before_yesterday) || 0,
     spentMonth: toNumber(row?.spent_month) || 0,
   };
 }
@@ -1010,9 +1015,20 @@ export async function buildWhatsAppMessage({
 
   const expenseSummary = await getExpenseSummary(baseToday);
 
-  const upcomingStart = addDays(baseToday, 1);
-  const upcomingEnd = addDays(baseToday, finalSettings.reminderDaysAhead);
+  const upcomingStart = baseToday;
+  const upcomingEnd = addDays(
+    baseToday,
+    Math.max(finalSettings.reminderDaysAhead - 1, 0),
+  );
   const upcomingDates = getDateRange(upcomingStart, upcomingEnd);
+
+  const paymentLookaheadDays = 7;
+  const paymentLookaheadStart = baseToday;
+  const paymentLookaheadEnd = addDays(baseToday, paymentLookaheadDays - 1);
+  const paymentLookaheadDates = getDateRange(
+    paymentLookaheadStart,
+    paymentLookaheadEnd,
+  );
 
   const overdueStart = addDays(baseToday, -finalSettings.overdueLookbackDays);
   const overdueEnd = addDays(baseToday, -1);
@@ -1031,6 +1047,7 @@ export async function buildWhatsAppMessage({
   const allDates = Array.from(
     new Set([
       ...upcomingDates,
+      ...paymentLookaheadDates,
       ...overdueDates,
       ...monthDates,
       ...birthdayDates.map((item) => item.date),
@@ -1042,12 +1059,18 @@ export async function buildWhatsAppMessage({
     finalSettings.timezone,
   );
 
-  const upcomingItems = buildItemsForDates({
+  const paymentLookaheadItems = buildItemsForDates({
     events,
     occurrences,
-    dates: upcomingDates,
+    dates: paymentLookaheadDates,
     timezone: finalSettings.timezone,
-    settings: finalSettings,
+    settings: {
+      ...finalSettings,
+      includeTasks: false,
+      includeEvents: false,
+      includePayments: true,
+      includeBirthdays: false,
+    },
     mode: "upcoming",
   });
 
@@ -1088,7 +1111,7 @@ export async function buildWhatsAppMessage({
     includeEmptyDays: finalSettings.includeEmptyDays,
   });
 
-  const upcomingPaymentsTotal = sumPayments(upcomingItems);
+  const upcomingPaymentsTotal = sumPayments(paymentLookaheadItems);
   const overduePaymentsTotal = sumPayments(overdueItems);
   const urgentTotal = upcomingPaymentsTotal + overduePaymentsTotal;
 
@@ -1129,22 +1152,19 @@ export async function buildWhatsAppMessage({
   ];
 
   if (finalSettings.includeMonthlySummary) {
-    const realMonthSpent = monthlyPaid + expenseSummary.spentMonth;
-    const estimatedMonthTotal = realMonthSpent + monthlyRemaining;
-
     lines.push(
       "",
-      "💰 Rezumat luna",
-      `✅ Plati achitate: ${formatLei(monthlyPaid)} lei`,
-      `💸 Cheltuieli spontane: ${formatLei(expenseSummary.spentMonth)} lei`,
-      `📊 Iesiri reale luna: ${formatLei(realMonthSpent)} lei`,
-      `⏳ Ramas de plata: ${formatLei(monthlyRemaining)} lei`,
-      `🧾 Estimat final luna: ${formatLei(estimatedMonthTotal)} lei`,
+      "💰 Rezumat lună",
+      `✅ Plăți achitate: ${formatLei(monthlyPaid)} lei`,
+      `⏳ Rămas de plată: ${formatLei(monthlyRemaining)} lei`,
+      `💸 Cheltuieli spontane luna aceasta: ${formatLei(
+        expenseSummary.spentMonth,
+      )} lei`,
       "",
       "💸 Cheltuieli recente",
-      `• Azi: ${formatLei(expenseSummary.spentToday)} lei`,
       `• Ieri: ${formatLei(expenseSummary.spentYesterday)} lei`,
-      `💳 De platit in urmatoarele ${finalSettings.reminderDaysAhead} zile: ${formatLei(
+      `• Alaltăieri: ${formatLei(expenseSummary.spentDayBeforeYesterday)} lei`,
+      `💳 De plătit în următoarele ${paymentLookaheadDays} zile: ${formatLei(
         upcomingPaymentsTotal,
       )} lei`,
     );
@@ -1154,8 +1174,8 @@ export async function buildWhatsAppMessage({
     lines.push(
       "",
       "⚠️ Prioritar",
-      `• Restante: ${formatLei(overduePaymentsTotal)} lei`,
-      `• Urmatoarele ${finalSettings.reminderDaysAhead} zile: ${formatLei(
+      `• Restanțe: ${formatLei(overduePaymentsTotal)} lei`,
+      `• Următoarele ${paymentLookaheadDays} zile: ${formatLei(
         upcomingPaymentsTotal,
       )} lei`,
       `• Total de pregătit: ${formatLei(urgentTotal)} lei`,
@@ -1205,7 +1225,9 @@ export async function buildWhatsAppMessage({
       overduePaymentsTotal,
       spentToday: expenseSummary.spentToday,
       spentYesterday: expenseSummary.spentYesterday,
+      spentDayBeforeYesterday: expenseSummary.spentDayBeforeYesterday,
       spentMonth: expenseSummary.spentMonth,
+      paymentLookaheadDays,
       urgentTotal,
     },
     settings: finalSettings,
