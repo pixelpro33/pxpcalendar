@@ -12,6 +12,17 @@ type Props = {
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
+function isCurrentDay(year: number, monthLabel: string, day: number) {
+  const today = new Date();
+  const monthIndex = Number(monthLabel) - 1;
+
+  return (
+    year === today.getFullYear() &&
+    monthIndex === today.getMonth() &&
+    day === today.getDate()
+  );
+}
+
 export default function CalendarList({
   daysInMonth,
   groupedByDay,
@@ -32,13 +43,18 @@ export default function CalendarList({
         }
 
         const date = new Date(`${selectedYear}-${selectedMonthLabel}-${day}`);
+        const isToday = isCurrentDay(selectedYear, selectedMonthLabel, day);
 
         return (
-          <div key={day} className="calendar-list-row">
+          <div
+            key={day}
+            className={`calendar-list-row ${isToday ? "is-today" : ""}`}
+          >
             <div className="calendar-list-date">
               <span className="calendar-list-weekday">
                 {WEEKDAYS[date.getDay()]}
               </span>
+
               <span className="calendar-list-day">{day}</span>
             </div>
 
