@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import AddEventDrawer from "@/components/calendar/AddEventDrawer";
+import AppNavigation, { AppSection } from "@/components/calendar/AppNavigation";
 import CalendarFilters from "@/components/calendar/CalendarFilters";
 import CalendarGrid from "@/components/calendar/CalendarGrid";
 import CalendarHeader from "@/components/calendar/CalendarHeader";
@@ -9,8 +10,9 @@ import CalendarList from "@/components/calendar/CalendarList";
 import CalendarStats from "@/components/calendar/CalendarStats";
 import ColorPickerModal from "@/components/calendar/ColorPickerModal";
 import EventDetailsModal from "@/components/calendar/EventDetailsModal";
-import RepeatModal from "@/components/calendar/RepeatModal";
 import MonthlyDashboard from "@/components/calendar/MonthlyDashboard";
+import RepeatModal from "@/components/calendar/RepeatModal";
+import SettingsPanel from "@/components/calendar/SettingsPanel";
 import {
   buildDraft,
   buildGroupedByDay,
@@ -206,6 +208,8 @@ function occurrenceFromApi(
 
 export default function HomeClient({ version }: Props) {
   const today = new Date();
+
+  const [activeSection, setActiveSection] = useState<AppSection>("calendar");
 
   const [selectedYear, setSelectedYear] = useState(today.getFullYear());
   const [selectedMonth, setSelectedMonth] = useState(today.getMonth());
@@ -643,15 +647,9 @@ export default function HomeClient({ version }: Props) {
           years={years}
         />
 
-        <CalendarStats paid={totals.paid} remaining={totals.remaining} />
-
-        <MonthlyDashboard items={monthItems} />
-
-        <CalendarFilters
-          filters={filters}
-          onToggle={toggleFilter}
-          hideEmptyDays={hideEmptyDays}
-          setHideEmptyDays={setHideEmptyDays}
+        <AppNavigation
+          activeSection={activeSection}
+          setActiveSection={setActiveSection}
         />
 
         {isLoadingEvents && (
@@ -660,34 +658,55 @@ export default function HomeClient({ version }: Props) {
 
         {eventsError && <div className="pxp-inline-error">{eventsError}</div>}
 
-        {viewMode === "grid" ? (
-          <CalendarGrid
-            daysInMonth={daysInMonth}
-            groupedByDay={groupedByDay}
-            selectedYear={selectedYear}
-            selectedMonth={selectedMonth}
-            onSelectItem={setSelectedItem}
-          />
-        ) : (
-          <CalendarList
-            daysInMonth={daysInMonth}
-            groupedByDay={groupedByDay}
-            selectedMonthLabel={String(selectedMonth + 1)}
-            selectedYear={selectedYear}
-            hideEmptyDays={hideEmptyDays}
-            onSelectItem={setSelectedItem}
-          />
+        {activeSection === "calendar" && (
+          <>
+            <CalendarStats paid={totals.paid} remaining={totals.remaining} />
+
+            <CalendarFilters
+              filters={filters}
+              onToggle={toggleFilter}
+              hideEmptyDays={hideEmptyDays}
+              setHideEmptyDays={setHideEmptyDays}
+            />
+
+            {viewMode === "grid" ? (
+              <CalendarGrid
+                daysInMonth={daysInMonth}
+                groupedByDay={groupedByDay}
+                selectedYear={selectedYear}
+                selectedMonth={selectedMonth}
+                onSelectItem={setSelectedItem}
+              />
+            ) : (
+              <CalendarList
+                daysInMonth={daysInMonth}
+                groupedByDay={groupedByDay}
+                selectedMonthLabel={String(selectedMonth + 1)}
+                selectedYear={selectedYear}
+                hideEmptyDays={hideEmptyDays}
+                onSelectItem={setSelectedItem}
+              />
+            )}
+          </>
         )}
+
+        {activeSection === "dashboard" && (
+          <MonthlyDashboard items={monthItems} />
+        )}
+
+        {activeSection === "settings" && <SettingsPanel />}
       </div>
 
-      <button
-        className="pxp-fab"
-        onClick={openAddDrawer}
-        aria-label="Add event"
-        type="button"
-      >
-        +
-      </button>
+      {activeSection === "calendar" && (
+        <button
+          className="pxp-fab"
+          onClick={openAddDrawer}
+          aria-label="Add event"
+          type="button"
+        >
+          +
+        </button>
+      )}
 
       <AddEventDrawer
         open={showAddDrawer}

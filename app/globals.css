@@ -1366,3 +1366,139 @@ body {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
+
+.pxp-app-nav {
+  position: sticky;
+  top: 82px;
+  z-index: 9;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+  margin: 8px 0 10px;
+  padding: 5px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.055);
+  backdrop-filter: blur(16px);
+}
+
+.pxp-app-nav-button {
+  min-width: 0;
+  min-height: 42px;
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.58);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.pxp-app-nav-button.is-active {
+  background: var(--blue);
+  color: white;
+  box-shadow: 0 12px 26px rgba(37, 99, 235, 0.24);
+}
+
+.pxp-app-nav-icon {
+  flex: 0 0 auto;
+  font-size: 15px;
+}
+
+.pxp-settings {
+  width: 100%;
+  margin: 10px 0 80px;
+}
+
+.pxp-settings-head {
+  margin-bottom: 12px;
+}
+
+.pxp-settings-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.pxp-settings-card {
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.045);
+  box-shadow: 0 14px 38px rgba(0, 0, 0, 0.16);
+  padding: 14px;
+}
+
+.pxp-settings-card-head h3 {
+  margin: 0 0 6px;
+  color: white;
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: -0.035em;
+}
+
+.pxp-settings-card-head p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.pxp-settings-category-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.pxp-settings-category-row {
+  min-height: 42px;
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.035);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+}
+
+.pxp-settings-category-row span {
+  color: white;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.pxp-settings-category-row small {
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.pxp-settings-placeholder {
+  margin-top: 14px;
+  border: 1px dashed rgba(255, 255, 255, 0.16);
+  border-radius: 16px;
+  color: rgba(255, 255, 255, 0.52);
+  padding: 14px;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+@media (max-width: 420px) {
+  .pxp-app-nav-button {
+    gap: 4px;
+    font-size: 12px;
+  }
+
+  .pxp-app-nav-icon {
+    display: none;
+  }
+}
+
+@media (min-width: 820px) {
+  .pxp-settings-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
