@@ -8,11 +8,12 @@ import CalendarGrid from "@/components/calendar/CalendarGrid";
 import CalendarHeader from "@/components/calendar/CalendarHeader";
 import CalendarList from "@/components/calendar/CalendarList";
 import CalendarStats from "@/components/calendar/CalendarStats";
-import ColorPickerModal from "@/components/calendar/ColorPickerModal";
+import EventDetailsModal from "@/components/calendar/EventDetailsModal";
+
 import MonthlyDashboard, {
   DashboardViewMode,
 } from "@/components/calendar/MonthlyDashboard";
-import RepeatModal from "@/components/calendar/RepeatModal";
+
 import SettingsPanel, {
   PaymentCategory,
 } from "@/components/calendar/SettingsPanel";
@@ -265,9 +266,6 @@ export default function HomeClient({ version }: Props) {
 
   const [showAddDrawer, setShowAddDrawer] = useState(false);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
-
-  const [showRepeatModal, setShowRepeatModal] = useState(false);
-  const [showColorModal, setShowColorModal] = useState(false);
 
   const [draft, setDraft] = useState<DraftEvent>(
     buildDraft(today.getFullYear(), today.getMonth()),
@@ -890,7 +888,7 @@ export default function HomeClient({ version }: Props) {
                 groupedByDay={groupedByDay}
                 selectedYear={selectedYear}
                 selectedMonth={selectedMonth}
-                onSelectItem={openEditDrawer}
+                onSelectItem={setSelectedItem}
               />
             ) : (
               <CalendarList
@@ -899,7 +897,7 @@ export default function HomeClient({ version }: Props) {
                 selectedMonthLabel={String(selectedMonth + 1)}
                 selectedYear={selectedYear}
                 hideEmptyDays={hideEmptyDays}
-                onSelectItem={openEditDrawer}
+                onSelectItem={setSelectedItem}
               />
             )}
           </>
@@ -944,26 +942,16 @@ export default function HomeClient({ version }: Props) {
           setShowAddDrawer(false);
         }}
         onSave={saveDraftItem}
-        onOpenRepeat={() => setShowRepeatModal(true)}
-        onOpenColor={() => setShowColorModal(true)}
         categories={activeCategoryNames}
         mode={editingItemId ? "edit" : "add"}
       />
 
-      <RepeatModal
-        open={showRepeatModal}
-        repeat={draft.repeat}
-        setRepeat={(value) => setDraft({ ...draft, repeat: value })}
-        customRepeat={draft.customRepeat}
-        setCustomRepeat={(value) => setDraft({ ...draft, customRepeat: value })}
-        onClose={() => setShowRepeatModal(false)}
-      />
-
-      <ColorPickerModal
-        open={showColorModal}
-        value={draft.customColor}
-        setValue={(value) => setDraft({ ...draft, customColor: value })}
-        onClose={() => setShowColorModal(false)}
+      <EventDetailsModal
+        item={selectedItem}
+        onClose={() => setSelectedItem(null)}
+        onToggleComplete={toggleComplete}
+        onDelete={deleteItem}
+        onEdit={openEditDrawer}
       />
     </main>
   );

@@ -11,3 +11,112 @@
 @import "./styles/dashboard.css";
 @import "./styles/responsive.css";
 @import "./styles/compact-square.css";
+
+/* Payment stats redesign */
+.pxp-stats {
+  gap: 10px;
+}
+
+.pxp-stat-card {
+  min-height: 58px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+}
+
+.pxp-stat-value {
+  font-size: clamp(18px, 5vw, 25px);
+  text-align: left;
+}
+
+.pxp-stat-side {
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+  min-width: 48px;
+}
+
+.pxp-stat-icon {
+  display: block;
+  font-size: 17px;
+  line-height: 1;
+}
+
+.pxp-stat-label {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.48);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* Inline repeat + color fields inside Add/Edit drawer */
+.pxp-custom-repeat-inline {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr);
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.pxp-color-inline {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.pxp-color-input {
+  width: 48px;
+  height: 46px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.055);
+  padding: 5px;
+  cursor: pointer;
+}
+
+.pxp-clear-color-button {
+  min-height: 46px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.055);
+  color: rgba(255, 255, 255, 0.82);
+  cursor: pointer;
+  padding: 0 12px;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+@media (max-width: 420px) {
+  .pxp-stats {
+    gap: 8px;
+  }
+
+  .pxp-stat-card {
+    padding: 10px;
+  }
+
+  .pxp-stat-side {
+    min-width: 38px;
+  }
+
+  .pxp-stat-icon {
+    font-size: 15px;
+  }
+
+  .pxp-stat-label {
+    font-size: 8px;
+  }
+
+  .pxp-color-inline {
+    grid-template-columns: 48px minmax(0, 1fr);
+  }
+
+  .pxp-clear-color-button {
+    grid-column: 1 / -1;
+  }
+}

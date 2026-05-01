@@ -1,6 +1,18 @@
 import { TYPE_CONFIG } from "./mockData";
-import { DraftEvent, EventType } from "./types";
+import { DraftEvent, EventType, RepeatType } from "./types";
 import { shouldShowAmount } from "./utils";
+
+const REPEAT_OPTIONS: Array<{
+  value: RepeatType;
+  label: string;
+}> = [
+  { value: "none", label: "Does not repeat" },
+  { value: "daily", label: "Every day" },
+  { value: "weekly", label: "Every week" },
+  { value: "monthly", label: "Every month" },
+  { value: "yearly", label: "Every year" },
+  { value: "custom", label: "Custom" },
+];
 
 export default function AddEventDrawer({
   open,
@@ -8,8 +20,6 @@ export default function AddEventDrawer({
   setDraft,
   onClose,
   onSave,
-  onOpenRepeat,
-  onOpenColor,
   categories,
   mode = "add",
 }: {
@@ -18,8 +28,6 @@ export default function AddEventDrawer({
   setDraft: (next: DraftEvent) => void;
   onClose: () => void;
   onSave: () => void;
-  onOpenRepeat: () => void;
-  onOpenColor: () => void;
   categories: string[];
   mode?: "add" | "edit";
 }) {
@@ -142,34 +150,100 @@ export default function AddEventDrawer({
               </div>
             </div>
 
-            <button
-              className="pxp-action-card"
-              onClick={onOpenRepeat}
-              type="button"
-            >
+            <div className="pxp-field-card">
               <div className="pxp-field-title">Repeat</div>
-              <div style={{ fontWeight: 800 }}>{draft.repeat}</div>
-            </button>
 
-            <button
-              className="pxp-action-card"
-              onClick={onOpenColor}
-              type="button"
-            >
+              <select
+                className="pxp-select"
+                value={draft.repeat}
+                onChange={(e) =>
+                  setDraft({
+                    ...draft,
+                    repeat: e.target.value as RepeatType,
+                  })
+                }
+              >
+                {REPEAT_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+
+              {draft.repeat === "custom" && (
+                <div className="pxp-custom-repeat-inline">
+                  <input
+                    className="pxp-input"
+                    type="number"
+                    min={1}
+                    value={draft.customRepeat.interval}
+                    onChange={(e) =>
+                      setDraft({
+                        ...draft,
+                        customRepeat: {
+                          ...draft.customRepeat,
+                          interval: Math.max(1, Number(e.target.value || 1)),
+                        },
+                      })
+                    }
+                  />
+
+                  <select
+                    className="pxp-select"
+                    value={draft.customRepeat.unit}
+                    onChange={(e) =>
+                      setDraft({
+                        ...draft,
+                        customRepeat: {
+                          ...draft.customRepeat,
+                          unit: e.target
+                            .value as DraftEvent["customRepeat"]["unit"],
+                        },
+                      })
+                    }
+                  >
+                    <option value="day">Day</option>
+                    <option value="week">Week</option>
+                    <option value="month">Month</option>
+                    <option value="year">Year</option>
+                  </select>
+                </div>
+              )}
+            </div>
+
+            <div className="pxp-field-card">
               <div className="pxp-field-title">Custom color</div>
 
-              <div className="pxp-color-preview-row">
-                <span
-                  className="pxp-color-preview"
-                  style={{
-                    background: draft.customColor || "rgba(255,255,255,0.08)",
-                  }}
+              <div className="pxp-color-inline">
+                <input
+                  className="pxp-color-input"
+                  type="color"
+                  value={draft.customColor || "#3b82f6"}
+                  onChange={(e) =>
+                    setDraft({ ...draft, customColor: e.target.value })
+                  }
                 />
-                <span style={{ opacity: 0.75 }}>
-                  {draft.customColor || "Default color"}
-                </span>
+
+                <input
+                  className="pxp-input"
+                  value={draft.customColor}
+                  onChange={(e) =>
+                    setDraft({ ...draft, customColor: e.target.value })
+                  }
+                  placeholder="#3b82f6"
+                />
+
+                {draft.customColor && (
+                  <button
+                    className="pxp-clear-color-button"
+                    type="button"
+                    onClick={() => setDraft({ ...draft, customColor: "" })}
+                  >
+                    Clear
+                  </button>
+                )}
               </div>
-            </button>
+            </div>
 
             <div className="pxp-field-card">
               <div className="pxp-field-title">Address / location</div>
