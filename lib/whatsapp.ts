@@ -702,16 +702,7 @@ function itemAmount(item: MessageItem) {
 }
 
 function formatItemLine(item: MessageItem, settings: WhatsAppSettings) {
-  const icon =
-    item.type === "pay"
-      ? "💳"
-      : item.type === "task"
-        ? "✅"
-        : item.type === "birthday"
-          ? "🎂"
-          : "📌";
-
-  const pieces = [`${icon} ${item.title}`];
+  const pieces = [item.title];
 
   if (!item.allDay && item.time) {
     pieces.push(item.time);
@@ -733,7 +724,7 @@ function formatItemLine(item: MessageItem, settings: WhatsAppSettings) {
   }
 
   if (item.birthdayDaysUntil) {
-    pieces.push(`in ${item.birthdayDaysUntil} zile`);
+    pieces.push(`în ${item.birthdayDaysUntil} zile`);
   }
 
   const mainLine = `• ${pieces.join(" · ")}`;
@@ -879,7 +870,7 @@ function buildDayGroups({
 function buildDaySection(group: DayGroup, settings: WhatsAppSettings) {
   const dayInfo = getMonthDayInfo(group.date);
   const lines = [
-    `📍 ${formatDateHuman(group.date)}`,
+    `🗓️ ${formatDateHuman(group.date)}`,
     `Ziua ${dayInfo.currentDay} / ${dayInfo.totalDays} din luna`,
   ];
 
