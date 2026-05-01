@@ -7,6 +7,10 @@ type WhatsAppSettings = {
   timezone: string;
   sendAt: string;
   sendEmptyMessage: boolean;
+
+  reminderDaysAhead: number;
+  includeEmptyDays: boolean;
+
   includeTasks: boolean;
   includeEvents: boolean;
   includePayments: boolean;
@@ -14,6 +18,18 @@ type WhatsAppSettings = {
   includeOnlyPending: boolean;
   includeLocation: boolean;
   includeAmounts: boolean;
+
+  includeMonthlySummary: boolean;
+
+  includeOverdue: boolean;
+  includeOverduePayments: boolean;
+  includeOverdueTasks: boolean;
+  includeOverdueEvents: boolean;
+  overdueLookbackDays: number;
+  maxOverdueItems: number;
+
+  priorityPaymentsFirst: boolean;
+
   birthdayReminderDays: number[];
   messageTitle: string;
   tomorrowLabel: string;
@@ -28,10 +44,21 @@ type PreviewData = {
   today: string;
   counts: {
     total: number;
+    upcoming: number;
+    overdue: number;
     tasks: number;
     events: number;
     payments: number;
     birthdays: number;
+  };
+  totals?: {
+    monthlyPaid: number;
+    monthlyRemaining: number;
+    monthlyTotal: number;
+    paidPercent: number;
+    upcomingPaymentsTotal: number;
+    overduePaymentsTotal: number;
+    urgentTotal: number;
   };
 };
 
@@ -40,6 +67,10 @@ const DEFAULT_SETTINGS: WhatsAppSettings = {
   timezone: "Europe/Bucharest",
   sendAt: "22:00",
   sendEmptyMessage: false,
+
+  reminderDaysAhead: 2,
+  includeEmptyDays: false,
+
   includeTasks: true,
   includeEvents: true,
   includePayments: true,
@@ -47,10 +78,22 @@ const DEFAULT_SETTINGS: WhatsAppSettings = {
   includeOnlyPending: true,
   includeLocation: true,
   includeAmounts: true,
+
+  includeMonthlySummary: true,
+
+  includeOverdue: true,
+  includeOverduePayments: true,
+  includeOverdueTasks: true,
+  includeOverdueEvents: false,
+  overdueLookbackDays: 45,
+  maxOverdueItems: 10,
+
+  priorityPaymentsFirst: true,
+
   birthdayReminderDays: [7, 5, 3, 1],
   messageTitle: "PXP Calendar",
-  tomorrowLabel: "Ai evenimente maine",
-  emptyMessage: "Nu ai evenimente pentru maine.",
+  tomorrowLabel: "Urmatoarele zile",
+  emptyMessage: "Nu ai evenimente programate.",
   testPrefix: "TEST",
 };
 
@@ -282,10 +325,7 @@ export default function WhatsAppPanel() {
         <div className="pxp-settings-card">
           <div className="pxp-settings-card-head">
             <h3>Control general</h3>
-            <p>
-              Cron-ul Vercel ruleaza la 19:00 UTC, aproximativ 22:00 Romania.
-              Setarea de ora ramane pentru referinta si pentru viitor.
-            </p>
+            <p>Setari principale pentru reminderul automat.</p>
           </div>
 
           <div className="pxp-wa-form">
@@ -298,17 +338,38 @@ export default function WhatsAppPanel() {
 
             <ToggleRow
               label="Trimite mesaj gol"
-              description="Trimite mesaj chiar daca nu exista evenimente."
+              description="Trimite mesaj chiar daca nu exista nimic programat."
               checked={settings.sendEmptyMessage}
               onChange={(value) => update("sendEmptyMessage", value)}
             />
 
             <ToggleRow
               label="Doar pending"
-              description="Exclude evenimentele completed."
+              description="Exclude lucrurile deja completate."
               checked={settings.includeOnlyPending}
               onChange={(value) => update("includeOnlyPending", value)}
             />
+
+            <ToggleRow
+              label="Zile goale"
+              description="Afiseaza si zile fara evenimente in perioada aleasa."
+              checked={settings.includeEmptyDays}
+              onChange={(value) => update("includeEmptyDays", value)}
+            />
+
+            <div className="pxp-field-card">
+              <div className="pxp-field-title">Cate zile in avans</div>
+              <input
+                className="pxp-input"
+                type="number"
+                min={1}
+                max={14}
+                value={settings.reminderDaysAhead}
+                onChange={(event) =>
+                  update("reminderDaysAhead", Number(event.target.value || 1))
+                }
+              />
+            </div>
 
             <div className="pxp-field-card">
               <div className="pxp-field-title">Ora reminder</div>
@@ -334,20 +395,20 @@ export default function WhatsAppPanel() {
         <div className="pxp-settings-card">
           <div className="pxp-settings-card-head">
             <h3>Ce intra in mesaj</h3>
-            <p>Alegi exact ce tipuri de date apar in reminder.</p>
+            <p>Alegi exact ce tipuri de informatii apar in reminder.</p>
           </div>
 
           <div className="pxp-wa-form">
             <ToggleRow
               label="Taskuri"
-              description="Include taskurile de maine."
+              description="Include taskurile."
               checked={settings.includeTasks}
               onChange={(value) => update("includeTasks", value)}
             />
 
             <ToggleRow
               label="Evenimente"
-              description="Include evenimentele de maine."
+              description="Include evenimentele."
               checked={settings.includeEvents}
               onChange={(value) => update("includeEvents", value)}
             />
@@ -375,10 +436,94 @@ export default function WhatsAppPanel() {
 
             <ToggleRow
               label="Sume"
-              description="Include valoarea in lei pentru plati/evenimente."
+              description="Include valoarea in lei."
               checked={settings.includeAmounts}
               onChange={(value) => update("includeAmounts", value)}
             />
+
+            <ToggleRow
+              label="Rezumat luna"
+              description="Include platit, ramas luna si total urgent."
+              checked={settings.includeMonthlySummary}
+              onChange={(value) => update("includeMonthlySummary", value)}
+            />
+
+            <ToggleRow
+              label="Platile primele"
+              description="Pune platile inaintea taskurilor si evenimentelor."
+              checked={settings.priorityPaymentsFirst}
+              onChange={(value) => update("priorityPaymentsFirst", value)}
+            />
+          </div>
+        </div>
+
+        <div className="pxp-settings-card">
+          <div className="pxp-settings-card-head">
+            <h3>Restante</h3>
+            <p>Lucruri din trecut care nu au fost marcate ca completed.</p>
+          </div>
+
+          <div className="pxp-wa-form">
+            <ToggleRow
+              label="Include restante"
+              description="Afiseaza plati/taskuri vechi ramase pending."
+              checked={settings.includeOverdue}
+              onChange={(value) => update("includeOverdue", value)}
+            />
+
+            <ToggleRow
+              label="Plati restante"
+              description="Include platile trecute necompletate."
+              checked={settings.includeOverduePayments}
+              onChange={(value) => update("includeOverduePayments", value)}
+            />
+
+            <ToggleRow
+              label="Taskuri restante"
+              description="Include taskurile trecute necompletate."
+              checked={settings.includeOverdueTasks}
+              onChange={(value) => update("includeOverdueTasks", value)}
+            />
+
+            <ToggleRow
+              label="Evenimente restante"
+              description="Include evenimente trecute necompletate."
+              checked={settings.includeOverdueEvents}
+              onChange={(value) => update("includeOverdueEvents", value)}
+            />
+
+            <div className="pxp-field-card">
+              <div className="pxp-field-title">
+                Cauta restante in ultimele zile
+              </div>
+              <input
+                className="pxp-input"
+                type="number"
+                min={1}
+                max={365}
+                value={settings.overdueLookbackDays}
+                onChange={(event) =>
+                  update(
+                    "overdueLookbackDays",
+                    Number(event.target.value || 45),
+                  )
+                }
+              />
+            </div>
+
+            <div className="pxp-field-card">
+              <div className="pxp-field-title">Maxim restante in mesaj</div>
+              <input
+                className="pxp-input"
+                type="number"
+                min={1}
+                max={50}
+                value={settings.maxOverdueItems}
+                onChange={(event) =>
+                  update("maxOverdueItems", Number(event.target.value || 10))
+                }
+              />
+            </div>
           </div>
         </div>
 
@@ -399,7 +544,7 @@ export default function WhatsAppPanel() {
             </div>
 
             <div className="pxp-field-card">
-              <div className="pxp-field-title">Text evenimente maine</div>
+              <div className="pxp-field-title">Text perioada</div>
               <input
                 className="pxp-input"
                 value={settings.tomorrowLabel}
@@ -442,10 +587,7 @@ export default function WhatsAppPanel() {
         <div className="pxp-settings-card">
           <div className="pxp-settings-card-head">
             <h3>Test & Preview</h3>
-            <p>
-              Preview-ul arata exact mesajul generat. Butonul de test trimite
-              acelasi mesaj pe WhatsApp.
-            </p>
+            <p>Preview-ul arata exact mesajul generat.</p>
           </div>
 
           <div className="pxp-wa-actions">
@@ -505,11 +647,20 @@ export default function WhatsAppPanel() {
 
             <div className="pxp-wa-preview-meta">
               <span>Total: {preview.counts.total}</span>
+              <span>Urmatoare: {preview.counts.upcoming}</span>
+              <span>Restante: {preview.counts.overdue}</span>
               <span>Taskuri: {preview.counts.tasks}</span>
-              <span>Evenimente: {preview.counts.events}</span>
               <span>Plati: {preview.counts.payments}</span>
               <span>Birthdays: {preview.counts.birthdays}</span>
             </div>
+
+            {preview.totals && (
+              <div className="pxp-wa-preview-meta">
+                <span>Ramas luna: {preview.totals.monthlyRemaining} lei</span>
+                <span>Urgent: {preview.totals.urgentTotal} lei</span>
+                <span>Progres: {preview.totals.paidPercent}%</span>
+              </div>
+            )}
 
             <pre className="pxp-wa-preview-text">{preview.message}</pre>
 
