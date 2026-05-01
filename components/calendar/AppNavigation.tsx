@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-export type AppSection = "calendar" | "dashboard" | "settings";
+export type AppSection = "calendar" | "dashboard" | "categories" | "whatsapp";
 
 type Props = {
   activeSection: AppSection;
@@ -17,7 +17,8 @@ const ITEMS: Array<{
 }> = [
   { id: "calendar", label: "Calendar", icon: "📅" },
   { id: "dashboard", label: "Dashboard", icon: "📊" },
-  { id: "settings", label: "Settings", icon: "⚙️" },
+  { id: "categories", label: "Categories", icon: "🏷️" },
+  { id: "whatsapp", label: "WhatsApp", icon: "💬" },
 ];
 
 export default function AppNavigation({
@@ -65,7 +66,7 @@ export default function AppNavigation({
           >
             <div
               className="pxp-mobile-menu-sheet"
-              onClick={(e) => e.stopPropagation()}
+              onClick={(event) => event.stopPropagation()}
             >
               <div className="pxp-mobile-menu-head">
                 <div>

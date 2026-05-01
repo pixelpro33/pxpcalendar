@@ -14,9 +14,11 @@ import MonthlyDashboard, {
   DashboardViewMode,
 } from "@/components/calendar/MonthlyDashboard";
 
-import SettingsPanel, {
+import CategoriesPanel, {
   PaymentCategory,
-} from "@/components/calendar/SettingsPanel";
+} from "@/components/calendar/CategoriesPanel";
+import WhatsAppPanel from "@/components/calendar/WhatsAppPanel";
+
 import {
   buildDraft,
   buildGroupedByDay,
@@ -911,8 +913,8 @@ export default function HomeClient({ version }: Props) {
           />
         )}
 
-        {activeSection === "settings" && (
-          <SettingsPanel
+        {activeSection === "categories" && (
+          <CategoriesPanel
             categories={categories}
             onCreateCategory={createCategory}
             onRenameCategory={renameCategory}
@@ -920,6 +922,8 @@ export default function HomeClient({ version }: Props) {
             onDeleteCategory={deleteCategory}
           />
         )}
+
+        {activeSection === "whatsapp" && <WhatsAppPanel />}
       </div>
 
       {activeSection === "calendar" && (

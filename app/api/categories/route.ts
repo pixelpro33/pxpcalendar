@@ -154,7 +154,8 @@ export async function PATCH(req: Request) {
         UPDATE payment_categories
         SET
           name = COALESCE($2, name),
-          is_active = COALESCE($3, is_active)
+          is_active = COALESCE($3, is_active),
+          updated_at = NOW()
         WHERE id = $1
         RETURNING
           id,
