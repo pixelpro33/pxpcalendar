@@ -294,51 +294,77 @@ function ChartView({
   totalRemaining: number;
   previousPaid: number;
 }) {
+  const visibleRows = rows.slice(0, 6);
   const paidChangeClass = getChangeClass(totalPaid, previousPaid);
 
   return (
-    <div className="pxp-dashboard-chart-panel">
-      <div
-        className="pxp-dashboard-donut"
-        style={{ background: buildDonutGradient(rows, totalMonth) }}
-      >
-        <div className="pxp-dashboard-donut-inner">
-          <span>Total</span>
-          <strong>{formatLei(totalMonth)}</strong>
-          <small>lei</small>
+    <div className="pxp-dashboard-chart-shell">
+      <div className="pxp-dashboard-chart-head">
+        <div>
+          <div className="pxp-dashboard-kicker">Categorii</div>
+          <h3 className="pxp-dashboard-subtitle">Distribuire cheltuieli</h3>
+        </div>
+
+        <div className="pxp-dashboard-list-total">
+          {rows.length} {rows.length === 1 ? "categorie" : "categorii"}
         </div>
       </div>
 
-      <div className="pxp-dashboard-chart-side">
-        <div className="pxp-dashboard-chart-mini">
-          <div>
-            <span>Platit</span>
-            <strong>{formatLei(totalPaid)} lei</strong>
+      <div className="pxp-dashboard-chart-grid">
+        <div className="pxp-dashboard-chart-visual">
+          <div
+            className="pxp-dashboard-donut-compact"
+            style={{ background: buildDonutGradient(rows, totalMonth) }}
+          >
+            <div className="pxp-dashboard-donut-compact-inner">
+              <span>Total</span>
+              <strong>{formatLei(totalMonth)}</strong>
+              <small>lei</small>
+            </div>
           </div>
 
-          <div>
-            <span>Ramas</span>
-            <strong>{formatLei(totalRemaining)} lei</strong>
+          <div className="pxp-dashboard-chart-mini-cards">
+            <div className="pxp-dashboard-chart-mini-card">
+              <span>Platit</span>
+              <strong>{formatLei(totalPaid)} lei</strong>
+            </div>
+
+            <div className="pxp-dashboard-chart-mini-card">
+              <span>Ramas</span>
+              <strong>{formatLei(totalRemaining)} lei</strong>
+            </div>
           </div>
         </div>
 
-        <div className={`pxp-category-change ${paidChangeClass}`}>
-          {getChangeLabel(totalPaid, previousPaid)}
-        </div>
-
-        <div className="pxp-dashboard-chart-legend">
-          {rows.map((row, index) => {
+        <div className="pxp-dashboard-chart-legend-box">
+          {visibleRows.map((row, index) => {
             const percent = getPercent(row.total, totalMonth);
             const color = CHART_COLORS[index % CHART_COLORS.length];
 
             return (
-              <div key={row.category} className="pxp-chart-legend-row">
-                <i style={{ background: color }} />
-                <span>{row.category}</span>
+              <div
+                key={row.category}
+                className="pxp-dashboard-chart-legend-item"
+              >
+                <div className="pxp-dashboard-chart-legend-left">
+                  <i
+                    className="pxp-dashboard-chart-legend-dot"
+                    style={{ background: color }}
+                  />
+                  <div className="pxp-dashboard-chart-legend-text">
+                    <strong>{row.category}</strong>
+                    <span>{formatLei(row.total)} lei</span>
+                  </div>
+                </div>
+
                 <b>{percent}%</b>
               </div>
             );
           })}
+
+          <div className={`pxp-dashboard-chart-change ${paidChangeClass}`}>
+            {getChangeLabel(totalPaid, previousPaid)}
+          </div>
         </div>
       </div>
     </div>

@@ -2565,3 +2565,209 @@ input[type="time"] {
     flex-direction: column;
   }
 }
+
+/* Compact dashboard chart */
+.pxp-dashboard-chart-shell {
+  margin-top: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.035);
+  padding: 12px;
+  overflow: hidden;
+}
+
+.pxp-dashboard-chart-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.pxp-dashboard-chart-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.pxp-dashboard-chart-visual {
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 14px;
+}
+
+.pxp-dashboard-donut-compact {
+  width: 172px;
+  height: 172px;
+  margin: 0 auto;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+.pxp-dashboard-donut-compact-inner {
+  width: 104px;
+  height: 104px;
+  border-radius: 999px;
+  background: #0d1018;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+  text-align: center;
+}
+
+.pxp-dashboard-donut-compact-inner span {
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.pxp-dashboard-donut-compact-inner strong {
+  margin-top: 4px;
+  color: white;
+  font-size: 18px;
+  font-weight: 950;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.pxp-dashboard-donut-compact-inner small {
+  margin-top: 4px;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.pxp-dashboard-chart-mini-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.pxp-dashboard-chart-mini-card {
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 10px;
+}
+
+.pxp-dashboard-chart-mini-card span {
+  display: block;
+  margin-bottom: 5px;
+  color: rgba(255, 255, 255, 0.46);
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.pxp-dashboard-chart-mini-card strong {
+  display: block;
+  color: white;
+  font-size: 16px;
+  font-weight: 950;
+  line-height: 1.1;
+}
+
+.pxp-dashboard-chart-legend-box {
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.pxp-dashboard-chart-legend-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 10px;
+}
+
+.pxp-dashboard-chart-legend-left {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pxp-dashboard-chart-legend-dot {
+  flex: 0 0 auto;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.045);
+}
+
+.pxp-dashboard-chart-legend-text {
+  min-width: 0;
+}
+
+.pxp-dashboard-chart-legend-text strong {
+  display: block;
+  color: white;
+  font-size: 13px;
+  font-weight: 900;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pxp-dashboard-chart-legend-text span {
+  display: block;
+  margin-top: 3px;
+  color: rgba(255, 255, 255, 0.46);
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.pxp-dashboard-chart-legend-item b {
+  flex: 0 0 auto;
+  color: #bfdbfe;
+  font-size: 13px;
+  font-weight: 950;
+}
+
+.pxp-dashboard-chart-change {
+  margin-top: 4px;
+  border-radius: 14px;
+  padding: 10px 12px;
+  font-size: 12px;
+  font-weight: 850;
+  line-height: 1.35;
+}
+
+.pxp-dashboard-chart-change.is-up {
+  background: rgba(239, 68, 68, 0.12);
+  color: rgba(252, 165, 165, 0.96);
+}
+
+.pxp-dashboard-chart-change.is-down {
+  background: rgba(34, 197, 94, 0.12);
+  color: rgba(134, 239, 172, 0.96);
+}
+
+.pxp-dashboard-chart-change.is-flat {
+  background: rgba(255, 255, 255, 0.045);
+  color: rgba(255, 255, 255, 0.62);
+}
+
+@media (min-width: 860px) {
+  .pxp-dashboard-chart-grid {
+    grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+    align-items: start;
+  }
+}
