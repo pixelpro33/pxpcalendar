@@ -1334,7 +1334,7 @@ export async function sendWhatsAppText(message: string) {
   }
 
   const useTemplate = Boolean(templateName);
-  const templateText = compactWhatsAppTemplateText(message);
+  const templateText = "Test PXP Calendar";
 
   const body = useTemplate
     ? {
