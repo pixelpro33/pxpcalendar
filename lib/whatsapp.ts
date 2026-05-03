@@ -1298,16 +1298,18 @@ export async function buildWhatsAppMessage({
 function compactWhatsAppTemplateText(message: string) {
   const cleaned = message
     .replace(/\r/g, "")
+    .replace(/━━━━━━━━━━━━/g, "-----")
+    .replace(/[^\S\r\n]+/g, " ")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
 
-  const maxLength = 900;
+  const maxLength = 450;
 
   if (cleaned.length <= maxLength) {
     return cleaned;
   }
 
-  return `${cleaned.slice(0, maxLength).trim()}\n\n...mesaj scurtat automat. Verifica aplicatia pentru detalii complete.`;
+  return `${cleaned.slice(0, maxLength).trim()}\n\n...deschide aplicatia pentru detalii.`;
 }
 
 export async function sendWhatsAppText(message: string) {
@@ -1334,7 +1336,7 @@ export async function sendWhatsAppText(message: string) {
   }
 
   const useTemplate = Boolean(templateName);
-  const templateText = "Test PXP Calendar";
+  const templateText = compactWhatsAppTemplateText(message);
 
   const body = useTemplate
     ? {
