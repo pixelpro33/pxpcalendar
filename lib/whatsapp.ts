@@ -1295,6 +1295,21 @@ export async function buildWhatsAppMessage({
   };
 }
 
+function compactWhatsAppTemplateText(message: string) {
+  const cleaned = message
+    .replace(/\r/g, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+
+  const maxLength = 900;
+
+  if (cleaned.length <= maxLength) {
+    return cleaned;
+  }
+
+  return `${cleaned.slice(0, maxLength).trim()}\n\n...mesaj scurtat automat. Verifica aplicatia pentru detalii complete.`;
+}
+
 export async function sendWhatsAppText(message: string) {
   const token = process.env.WHATSAPP_TOKEN;
   const phoneId = process.env.WHATSAPP_PHONE_ID;
@@ -1319,6 +1334,7 @@ export async function sendWhatsAppText(message: string) {
   }
 
   const useTemplate = Boolean(templateName);
+  const templateText = compactWhatsAppTemplateText(message);
 
   const body = useTemplate
     ? {
@@ -1336,7 +1352,7 @@ export async function sendWhatsAppText(message: string) {
               parameters: [
                 {
                   type: "text",
-                  text: message,
+                  text: templateText,
                 },
               ],
             },
