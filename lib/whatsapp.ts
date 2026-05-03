@@ -1300,6 +1300,9 @@ export async function sendWhatsAppText(message: string) {
   const phoneId = process.env.WHATSAPP_PHONE_ID;
   const to = process.env.WHATSAPP_TO;
 
+  const templateName = process.env.WHATSAPP_TEMPLATE_NAME;
+  const templateLanguage = process.env.WHATSAPP_TEMPLATE_LANGUAGE || "ro";
+
   if (!token || !phoneId || !to) {
     return {
       ok: false,
@@ -1315,6 +1318,41 @@ export async function sendWhatsAppText(message: string) {
     };
   }
 
+  const useTemplate = Boolean(templateName);
+
+  const body = useTemplate
+    ? {
+        messaging_product: "whatsapp",
+        to,
+        type: "template",
+        template: {
+          name: templateName,
+          language: {
+            code: templateLanguage,
+          },
+          components: [
+            {
+              type: "body",
+              parameters: [
+                {
+                  type: "text",
+                  text: message,
+                },
+              ],
+            },
+          ],
+        },
+      }
+    : {
+        messaging_product: "whatsapp",
+        to,
+        type: "text",
+        text: {
+          preview_url: true,
+          body: message,
+        },
+      };
+
   const response = await fetch(
     `https://graph.facebook.com/v19.0/${phoneId}/messages`,
     {
@@ -1323,15 +1361,7 @@ export async function sendWhatsAppText(message: string) {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        messaging_product: "whatsapp",
-        to,
-        type: "text",
-        text: {
-          preview_url: true,
-          body: message,
-        },
-      }),
+      body: JSON.stringify(body),
     },
   );
 
