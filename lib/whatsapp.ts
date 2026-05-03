@@ -1296,20 +1296,57 @@ export async function buildWhatsAppMessage({
 }
 
 function compactWhatsAppTemplateText(message: string) {
-  const cleaned = message
+  const lines = message
     .replace(/\r/g, "")
-    .replace(/━━━━━━━━━━━━/g, "-----")
-    .replace(/[^\S\r\n]+/g, " ")
-    .replace(/\n{3,}/g, "\n\n")
+    .replace(/━━━━━━━━━━━━/g, " ")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  const usefulLines = lines.filter((line) => {
+    const lower = line.toLowerCase();
+
+    if (lower.includes("[todo]")) return false;
+    if (lower.includes("pxp calendar")) return false;
+    if (lower.includes("pentru oprire")) return false;
+    if (lower.includes("-----")) return false;
+
+    return (
+      lower.includes("evenimente") ||
+      lower.includes("plati") ||
+      lower.includes("plăți") ||
+      lower.includes("ramas") ||
+      lower.includes("rămas") ||
+      lower.includes("venituri") ||
+      lower.includes("cheltuieli") ||
+      lower.includes("sold") ||
+      lower.includes("restante") ||
+      lower.includes("restanțe") ||
+      lower.includes("de platit") ||
+      lower.includes("de plătit") ||
+      lower.includes("taskuri") ||
+      lower.includes("mai") ||
+      lower.includes("lei")
+    );
+  });
+
+  const compact = usefulLines
+    .join(" | ")
+    .replace(/[^\p{L}\p{N}\s.,:;|/\-+]/gu, "")
+    .replace(/\s+/g, " ")
     .trim();
 
-  const maxLength = 450;
+  const fallback =
+    "Ai briefing nou in PXP Calendar. Verifica aplicatia pentru evenimente, plati, cheltuieli si cashflow.";
 
-  if (cleaned.length <= maxLength) {
-    return cleaned;
+  const text = compact || fallback;
+  const maxLength = 250;
+
+  if (text.length <= maxLength) {
+    return text;
   }
 
-  return `${cleaned.slice(0, maxLength).trim()}\n\n...deschide aplicatia pentru detalii.`;
+  return `${text.slice(0, maxLength).trim()}... Deschide aplicatia pentru detalii.`;
 }
 
 export async function sendWhatsAppText(message: string) {
